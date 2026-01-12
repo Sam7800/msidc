@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../form_date_picker.dart';
+import '../critical_bell_icon.dart';
 
 /// LOA Section - Letter of Acceptance
-/// Radio: Issued/Not Issued with conditional fields
+/// Radio: Issued/Not Issued with bell icon and conditional fields
 class LOASection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const LOASection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -26,8 +29,9 @@ class _LOASectionState extends State<LOASection> {
   late TextEditingController _loaNoController;
   late TextEditingController _contractorNameController;
   late TextEditingController _amountController;
+  late TextEditingController _reasonsController;
 
-  String _issuedStatus = 'not_issued'; // not_issued or issued
+  String _issuedStatus = 'issued'; // issued or not_issued
   DateTime? _dateOfIssue;
 
   @override
@@ -44,6 +48,7 @@ class _LOASectionState extends State<LOASection> {
     _loaNoController = TextEditingController();
     _contractorNameController = TextEditingController();
     _amountController = TextEditingController();
+    _reasonsController = TextEditingController();
   }
 
   void _loadInitialData() {
@@ -54,9 +59,11 @@ class _LOASectionState extends State<LOASection> {
       _pendingWithController.text = widget.initialData['pending_with'] ?? '';
 
       final sectionData = widget.initialData['section_data'] ?? {};
-      _issuedStatus = sectionData['issued_status'] ?? 'not_issued';
+      _issuedStatus = sectionData['issued_status'] ?? 'issued';
 
-      if (_issuedStatus == 'issued') {
+      if (_issuedStatus == 'not_issued') {
+        _reasonsController.text = sectionData['reasons'] ?? '';
+      } else if (_issuedStatus == 'issued') {
         _loaNoController.text = sectionData['loa_no'] ?? '';
         _contractorNameController.text = sectionData['contractor_name'] ?? '';
         _amountController.text = sectionData['amount'] ?? '';
@@ -72,7 +79,9 @@ class _LOASectionState extends State<LOASection> {
       'issued_status': _issuedStatus,
     };
 
-    if (_issuedStatus == 'issued') {
+    if (_issuedStatus == 'not_issued') {
+      sectionData['reasons'] = _reasonsController.text;
+    } else if (_issuedStatus == 'issued') {
       sectionData['loa_no'] = _loaNoController.text;
       sectionData['date_of_issue'] = _dateOfIssue?.toIso8601String();
       sectionData['contractor_name'] = _contractorNameController.text;
@@ -95,6 +104,7 @@ class _LOASectionState extends State<LOASection> {
     _loaNoController.dispose();
     _contractorNameController.dispose();
     _amountController.dispose();
+    _reasonsController.dispose();
     super.dispose();
   }
 
@@ -106,100 +116,70 @@ class _LOASectionState extends State<LOASection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'LOA Status',
+            'LOA:',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+
+          // a) Issued
+          RadioListTile<String>(
+            title: const Text('a) Issued'),
+            value: 'issued',
+            groupValue: _issuedStatus,
+            onChanged: (value) {
+              setState(() {
+                _issuedStatus = value!;
+                _notifyDataChanged();
+              });
+            },
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+
+          // b) Not issued – Reasons
           Row(
             children: [
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('Not Issued'),
-                  value: 'not_issued',
-                  groupValue: _issuedStatus,
-                  onChanged: (value) {
-                    setState(() {
-                      _issuedStatus = value!;
-                      _notifyDataChanged();
-                    });
-                  },
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
+              Radio<String>(
+                value: 'not_issued',
+                groupValue: _issuedStatus,
+                onChanged: (value) {
+                  setState(() {
+                    _issuedStatus = value!;
+                    _notifyDataChanged();
+                  });
+                },
               ),
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('Issued'),
-                  value: 'issued',
-                  groupValue: _issuedStatus,
-                  onChanged: (value) {
-                    setState(() {
-                      _issuedStatus = value!;
-                      _notifyDataChanged();
-                    });
-                  },
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
+              const Text(
+                'b) Not issued – Reasons',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(width: 8),
+              CriticalBellIcon(
+                projectId: widget.projectId,
+                sectionName: 'LOA',
+                optionName: 'Not issued – Reasons',
               ),
             ],
           ),
-          const SizedBox(height: 24),
 
-          // Conditional Fields (if issued)
-          if (_issuedStatus == 'issued') ...[
+          // Show reasons text field when not issued is selected
+          if (_issuedStatus == 'not_issued') ...[
+            const SizedBox(height: 16),
             TextFormField(
-              controller: _loaNoController,
+              controller: _reasonsController,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
-                labelText: 'LOA Number',
-                hintText: 'e.g., "LOA/2026/001"',
-                prefixIcon: Icon(Icons.confirmation_number, size: 20),
+                hintText: 'Enter reasons',
                 border: OutlineInputBorder(),
               ),
-            ),
-            const SizedBox(height: 16),
-
-            FormDatePicker(
-              label: 'Date of Issue',
-              selectedDate: _dateOfIssue,
-              onDateSelected: (date) {
-                setState(() {
-                  _dateOfIssue = date;
-                  _notifyDataChanged();
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            TextFormField(
-              controller: _contractorNameController,
-              onChanged: (_) => _notifyDataChanged(),
-              decoration: const InputDecoration(
-                labelText: 'Contractor Name',
-                hintText: 'Enter contractor name',
-                prefixIcon: Icon(Icons.business, size: 20),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            TextFormField(
-              controller: _amountController,
-              onChanged: (_) => _notifyDataChanged(),
-              decoration: const InputDecoration(
-                labelText: 'Amount (in Lakhs)',
-                hintText: 'e.g., 450',
-                prefixIcon: Icon(Icons.currency_rupee, size: 20),
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
             ),
           ],
+
+          const SizedBox(height: 24),
 
           // Common Fields
           SectionCommonFields(

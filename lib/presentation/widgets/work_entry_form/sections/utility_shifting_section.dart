@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../form_date_picker.dart';
+import '../critical_bell_icon.dart';
 
 /// Utility Shifting Section
-/// Radio: N/A or Applicable with conditional fields
+/// Radio: N/A or Applicable with status checkboxes and conditional fields
 class UtilityShiftingSection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const UtilityShiftingSection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -27,7 +30,15 @@ class _UtilityShiftingSectionState extends State<UtilityShiftingSection> {
   late TextEditingController _remarksController;
 
   String _applicability = 'na'; // na or applicable
-  DateTime? _completionDate;
+  String _selectedStatus = 'not_started';
+  DateTime? _submissionDate;
+  late TextEditingController _statusController;
+
+  final List<Map<String, String>> _statusOptions = [
+    {'value': 'not_started', 'label': 'Proposal Not started'},
+    {'value': 'under_preparation', 'label': 'Proposal under preparation'},
+    {'value': 'submitted', 'label': 'Proposal Submitted'},
+  ];
 
   @override
   void initState() {
@@ -41,6 +52,7 @@ class _UtilityShiftingSectionState extends State<UtilityShiftingSection> {
     _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
     _utilityTypeController = TextEditingController();
+    _statusController = TextEditingController();
     _remarksController = TextEditingController();
   }
 
@@ -53,12 +65,14 @@ class _UtilityShiftingSectionState extends State<UtilityShiftingSection> {
 
       final sectionData = widget.initialData['section_data'] ?? {};
       _applicability = sectionData['applicability'] ?? 'na';
+      _selectedStatus = sectionData['status'] ?? 'not_started';
 
       if (_applicability == 'applicable') {
         _utilityTypeController.text = sectionData['utility_type'] ?? '';
+        _statusController.text = sectionData['status_text'] ?? '';
         _remarksController.text = sectionData['remarks'] ?? '';
-        if (sectionData['completion_date'] != null) {
-          _completionDate = DateTime.parse(sectionData['completion_date']);
+        if (sectionData['submission_date'] != null) {
+          _submissionDate = DateTime.parse(sectionData['submission_date']);
         }
       }
     }
@@ -70,8 +84,10 @@ class _UtilityShiftingSectionState extends State<UtilityShiftingSection> {
     };
 
     if (_applicability == 'applicable') {
+      sectionData['status'] = _selectedStatus;
       sectionData['utility_type'] = _utilityTypeController.text;
-      sectionData['completion_date'] = _completionDate?.toIso8601String();
+      sectionData['submission_date'] = _submissionDate?.toIso8601String();
+      sectionData['status_text'] = _statusController.text;
       sectionData['remarks'] = _remarksController.text;
     }
 
@@ -89,6 +105,7 @@ class _UtilityShiftingSectionState extends State<UtilityShiftingSection> {
     _postHeldController.dispose();
     _pendingWithController.dispose();
     _utilityTypeController.dispose();
+    _statusController.dispose();
     _remarksController.dispose();
     super.dispose();
   }
@@ -148,40 +165,87 @@ class _UtilityShiftingSectionState extends State<UtilityShiftingSection> {
 
           // Conditional Fields (if applicable)
           if (_applicability == 'applicable') ...[
-            TextFormField(
-              controller: _utilityTypeController,
-              onChanged: (_) => _notifyDataChanged(),
-              decoration: const InputDecoration(
-                labelText: 'Utility Type',
-                hintText: 'e.g., Electric, Water, Telecom',
-                prefixIcon: Icon(Icons.construction, size: 20),
-                border: OutlineInputBorder(),
+            // Status Selection
+            const Text(
+              'Status',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-            FormDatePicker(
-              label: 'Completion Date',
-              selectedDate: _completionDate,
-              onDateSelected: (date) {
-                setState(() {
-                  _completionDate = date;
-                  _notifyDataChanged();
-                });
-              },
-            ),
-            const SizedBox(height: 16),
+            ..._statusOptions.map((option) {
+              final isSelected = _selectedStatus == option['value'];
+              // Show bell on BOTH Proposal under preparation AND Proposal Submitted (unique to Utility Shifting)
+              final showBellIcon = option['value'] == 'under_preparation' ||
+                                   option['value'] == 'submitted';
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: isSelected,
+                      onChanged: (checked) {
+                        if (checked == true) {
+                          setState(() {
+                            _selectedStatus = option['value']!;
+                            _notifyDataChanged();
+                          });
+                        }
+                      },
+                    ),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedStatus = option['value']!;
+                            _notifyDataChanged();
+                          });
+                        },
+                        child: Text(
+                          option['label']!,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    ),
+                    if (showBellIcon)
+                      CriticalBellIcon(
+                        projectId: widget.projectId,
+                        sectionName: 'Utility Shifting',
+                        optionName: option['label']!,
+                      ),
+                  ],
+                ),
+              );
+            }),
+
+            const SizedBox(height: 24),
+
+            // Show Date picker only when Proposal Submitted is selected
+            if (_selectedStatus == 'submitted') ...[
+              FormDatePicker(
+                label: 'Proposal Submitted Date',
+                selectedDate: _submissionDate,
+                onDateSelected: (date) {
+                  setState(() {
+                    _submissionDate = date;
+                    _notifyDataChanged();
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
 
             TextFormField(
-              controller: _remarksController,
+              controller: _statusController,
               onChanged: (_) => _notifyDataChanged(),
-              maxLines: 3,
               decoration: const InputDecoration(
-                labelText: 'Remarks',
-                hintText: 'Enter remarks',
-                prefixIcon: Icon(Icons.notes, size: 20),
+                labelText: 'Status',
+                hintText: 'Enter current status',
+                prefixIcon: Icon(Icons.info_outline, size: 20),
                 border: OutlineInputBorder(),
-                alignLabelWithHint: true,
               ),
             ),
           ],

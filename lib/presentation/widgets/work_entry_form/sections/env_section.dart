@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../form_date_picker.dart';
+import '../critical_bell_icon.dart';
 
 /// ENV Section - Environmental Clearance
-/// Radio: N/A or Applicable with conditional fields
+/// Radio: N/A or Applicable with status checkboxes and conditional fields
 class ENVSection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const ENVSection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -27,7 +30,15 @@ class _ENVSectionState extends State<ENVSection> {
   late TextEditingController _remarksController;
 
   String _applicability = 'na'; // na or applicable
-  DateTime? _dateOfClearance;
+  String _selectedStatus = 'not_started';
+  DateTime? _submissionDate;
+  late TextEditingController _statusController;
+
+  final List<Map<String, String>> _statusOptions = [
+    {'value': 'not_started', 'label': 'Proposal Not started'},
+    {'value': 'under_preparation', 'label': 'Proposal under preparation'},
+    {'value': 'submitted', 'label': 'Proposal Submitted'},
+  ];
 
   @override
   void initState() {
@@ -41,6 +52,7 @@ class _ENVSectionState extends State<ENVSection> {
     _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
     _referenceNoController = TextEditingController();
+    _statusController = TextEditingController();
     _remarksController = TextEditingController();
   }
 
@@ -53,12 +65,14 @@ class _ENVSectionState extends State<ENVSection> {
 
       final sectionData = widget.initialData['section_data'] ?? {};
       _applicability = sectionData['applicability'] ?? 'na';
+      _selectedStatus = sectionData['status'] ?? 'not_started';
 
       if (_applicability == 'applicable') {
         _referenceNoController.text = sectionData['reference_no'] ?? '';
+        _statusController.text = sectionData['status_text'] ?? '';
         _remarksController.text = sectionData['remarks'] ?? '';
-        if (sectionData['date_of_clearance'] != null) {
-          _dateOfClearance = DateTime.parse(sectionData['date_of_clearance']);
+        if (sectionData['submission_date'] != null) {
+          _submissionDate = DateTime.parse(sectionData['submission_date']);
         }
       }
     }
@@ -70,8 +84,10 @@ class _ENVSectionState extends State<ENVSection> {
     };
 
     if (_applicability == 'applicable') {
+      sectionData['status'] = _selectedStatus;
       sectionData['reference_no'] = _referenceNoController.text;
-      sectionData['date_of_clearance'] = _dateOfClearance?.toIso8601String();
+      sectionData['submission_date'] = _submissionDate?.toIso8601String();
+      sectionData['status_text'] = _statusController.text;
       sectionData['remarks'] = _remarksController.text;
     }
 
@@ -89,6 +105,7 @@ class _ENVSectionState extends State<ENVSection> {
     _postHeldController.dispose();
     _pendingWithController.dispose();
     _referenceNoController.dispose();
+    _statusController.dispose();
     _remarksController.dispose();
     super.dispose();
   }
@@ -148,40 +165,85 @@ class _ENVSectionState extends State<ENVSection> {
 
           // Conditional Fields (if applicable)
           if (_applicability == 'applicable') ...[
-            TextFormField(
-              controller: _referenceNoController,
-              onChanged: (_) => _notifyDataChanged(),
-              decoration: const InputDecoration(
-                labelText: 'Reference Number',
-                hintText: 'Enter reference number',
-                prefixIcon: Icon(Icons.confirmation_number, size: 20),
-                border: OutlineInputBorder(),
+            // Status Selection
+            const Text(
+              'Status',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-            FormDatePicker(
-              label: 'Date of Clearance',
-              selectedDate: _dateOfClearance,
-              onDateSelected: (date) {
-                setState(() {
-                  _dateOfClearance = date;
-                  _notifyDataChanged();
-                });
-              },
-            ),
-            const SizedBox(height: 16),
+            ..._statusOptions.map((option) {
+              final isSelected = _selectedStatus == option['value'];
+              final showBellIcon = option['value'] == 'under_preparation'; // Only show bell on Proposal under preparation
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: isSelected,
+                      onChanged: (checked) {
+                        if (checked == true) {
+                          setState(() {
+                            _selectedStatus = option['value']!;
+                            _notifyDataChanged();
+                          });
+                        }
+                      },
+                    ),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedStatus = option['value']!;
+                            _notifyDataChanged();
+                          });
+                        },
+                        child: Text(
+                          option['label']!,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    ),
+                    if (showBellIcon)
+                      CriticalBellIcon(
+                        projectId: widget.projectId,
+                        sectionName: 'ENV',
+                        optionName: option['label']!,
+                      ),
+                  ],
+                ),
+              );
+            }),
+
+            const SizedBox(height: 24),
+
+            // Show Date picker only when Proposal Submitted is selected
+            if (_selectedStatus == 'submitted') ...[
+              FormDatePicker(
+                label: 'Proposal Submitted Date',
+                selectedDate: _submissionDate,
+                onDateSelected: (date) {
+                  setState(() {
+                    _submissionDate = date;
+                    _notifyDataChanged();
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
 
             TextFormField(
-              controller: _remarksController,
+              controller: _statusController,
               onChanged: (_) => _notifyDataChanged(),
-              maxLines: 3,
               decoration: const InputDecoration(
-                labelText: 'Remarks',
-                hintText: 'Enter remarks',
-                prefixIcon: Icon(Icons.notes, size: 20),
+                labelText: 'Status',
+                hintText: 'Enter current status',
+                prefixIcon: Icon(Icons.info_outline, size: 20),
                 border: OutlineInputBorder(),
-                alignLabelWithHint: true,
               ),
             ),
           ],

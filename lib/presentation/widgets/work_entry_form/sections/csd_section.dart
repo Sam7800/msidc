@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../form_date_picker.dart';
+import '../critical_bell_icon.dart';
 
 /// CSD Section - Common Set of Deviations
-/// Multiple checkboxes + date
+/// Status checkboxes with bell icons + date
 class CSDSection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const CSDSection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -24,10 +27,15 @@ class _CSDSectionState extends State<CSDSection> {
   late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
 
-  bool _isApplicable = false;
-  bool _isSubmitted = false;
-  bool _isApproved = false;
+  String _selectedStatus = 'not_applicable';
   DateTime? _submissionDate;
+
+  final List<Map<String, String>> _statusOptions = [
+    {'value': 'not_applicable', 'label': 'Not Applicable'},
+    {'value': 'queries_in_progress', 'label': 'Queries reply in progress'},
+    {'value': 'replies_submitted', 'label': 'Replies submitted for approval'},
+    {'value': 'approved', 'label': 'Approved'},
+  ];
 
   @override
   void initState() {
@@ -50,9 +58,7 @@ class _CSDSectionState extends State<CSDSection> {
       _pendingWithController.text = widget.initialData['pending_with'] ?? '';
 
       final sectionData = widget.initialData['section_data'] ?? {};
-      _isApplicable = sectionData['is_applicable'] ?? false;
-      _isSubmitted = sectionData['is_submitted'] ?? false;
-      _isApproved = sectionData['is_approved'] ?? false;
+      _selectedStatus = sectionData['status'] ?? 'not_applicable';
       if (sectionData['submission_date'] != null) {
         _submissionDate = DateTime.parse(sectionData['submission_date']);
       }
@@ -65,9 +71,7 @@ class _CSDSectionState extends State<CSDSection> {
       'post_held': _postHeldController.text,
       'pending_with': _pendingWithController.text,
       'section_data': {
-        'is_applicable': _isApplicable,
-        'is_submitted': _isSubmitted,
-        'is_approved': _isApproved,
+        'status': _selectedStatus,
         'submission_date': _submissionDate?.toIso8601String(),
       },
     });
@@ -98,47 +102,50 @@ class _CSDSectionState extends State<CSDSection> {
           ),
           const SizedBox(height: 12),
 
-          CheckboxListTile(
-            title: const Text('Applicable'),
-            value: _isApplicable,
-            onChanged: (value) {
-              setState(() {
-                _isApplicable = value ?? false;
-                _notifyDataChanged();
-              });
-            },
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-          ),
-
-          CheckboxListTile(
-            title: const Text('Submitted'),
-            value: _isSubmitted,
-            onChanged: (value) {
-              setState(() {
-                _isSubmitted = value ?? false;
-                _notifyDataChanged();
-              });
-            },
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-          ),
-
-          CheckboxListTile(
-            title: const Text('Approved'),
-            value: _isApproved,
-            onChanged: (value) {
-              setState(() {
-                _isApproved = value ?? false;
-                _notifyDataChanged();
-              });
-            },
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-          ),
+          ..._statusOptions.map((option) {
+            final isSelected = _selectedStatus == option['value'];
+            // Show bell on "Queries reply in progress" and "Replies submitted for approval"
+            final showBellIcon = option['value'] == 'queries_in_progress' ||
+                                 option['value'] == 'replies_submitted';
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Checkbox(
+                    value: isSelected,
+                    onChanged: (checked) {
+                      if (checked == true) {
+                        setState(() {
+                          _selectedStatus = option['value']!;
+                          _notifyDataChanged();
+                        });
+                      }
+                    },
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedStatus = option['value']!;
+                          _notifyDataChanged();
+                        });
+                      },
+                      child: Text(
+                        option['label']!,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  ),
+                  if (showBellIcon)
+                    CriticalBellIcon(
+                      projectId: widget.projectId,
+                      sectionName: 'CSD',
+                      optionName: option['label']!,
+                    ),
+                ],
+              ),
+            );
+          }),
 
           const SizedBox(height: 24),
 

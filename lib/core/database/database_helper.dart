@@ -11,6 +11,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 /// 4. work_entry_sections - 33+ sections with JSON data
 /// 5. section_attachments - File uploads
 /// 6. milestones - 5 milestones (MS-I to MS-V)
+/// 7. critical_subsections - Critical activities tracking
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
@@ -39,7 +40,7 @@ class DatabaseHelper {
 
     final db = await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onConfigure: _onConfigure,
       onUpgrade: _onUpgrade,
@@ -58,6 +59,28 @@ class DatabaseHelper {
     if (oldVersion < 2) {
       // Add icon column to categories table
       await db.execute('ALTER TABLE categories ADD COLUMN icon TEXT DEFAULT "folder"');
+    }
+    if (oldVersion < 3) {
+      // Add critical_subsections table
+      await db.execute('''
+        CREATE TABLE critical_subsections (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          project_id INTEGER NOT NULL,
+          section_name TEXT NOT NULL,
+          option_name TEXT NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE,
+          UNIQUE(project_id, section_name, option_name)
+        )
+      ''');
+
+      await db.execute('''
+        CREATE INDEX idx_critical_project ON critical_subsections(project_id)
+      ''');
+
+      await db.execute('''
+        CREATE INDEX idx_critical_section ON critical_subsections(section_name)
+      ''');
     }
   }
 
@@ -207,6 +230,27 @@ class DatabaseHelper {
 
     await db.execute('''
       CREATE INDEX idx_milestones_name ON milestones(milestone_name)
+    ''');
+
+    // 7. Critical Subsections Table (for alert/critical activities)
+    await db.execute('''
+      CREATE TABLE critical_subsections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id INTEGER NOT NULL,
+        section_name TEXT NOT NULL,
+        option_name TEXT NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE,
+        UNIQUE(project_id, section_name, option_name)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX idx_critical_project ON critical_subsections(project_id)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX idx_critical_section ON critical_subsections(section_name)
     ''');
   }
 

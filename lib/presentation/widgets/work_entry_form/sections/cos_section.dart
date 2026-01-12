@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
+import '../form_date_picker.dart';
 import '../dynamic_table_widget.dart';
+import '../critical_bell_icon.dart';
 
 /// COS Section - Change of Scope
 /// Radio: N/A or Applicable with 2 tables
 class COSSection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const COSSection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -25,8 +29,10 @@ class _COSSectionState extends State<COSSection> {
   late TextEditingController _pendingWithController;
 
   String _applicability = 'na'; // na or applicable
-  List<Map<String, String>> _addedItemsRows = [];
-  List<Map<String, String>> _deletedItemsRows = [];
+  String _proposalStatus = 'not_started'; // not_started, under_consideration, submitted, approved
+  DateTime? _submittedDate;
+  List<Map<String, String>> _underConsiderationRows = [];
+  List<Map<String, String>> _approvedRows = [];
 
   @override
   void initState() {
@@ -52,13 +58,17 @@ class _COSSectionState extends State<COSSection> {
       _applicability = sectionData['applicability'] ?? 'na';
 
       if (_applicability == 'applicable') {
-        if (sectionData['added_items'] is List) {
-          _addedItemsRows = (sectionData['added_items'] as List)
+        _proposalStatus = sectionData['proposal_status'] ?? 'not_started';
+        if (sectionData['submitted_date'] != null) {
+          _submittedDate = DateTime.parse(sectionData['submitted_date']);
+        }
+        if (sectionData['under_consideration_items'] is List) {
+          _underConsiderationRows = (sectionData['under_consideration_items'] as List)
               .map((item) => Map<String, String>.from(item))
               .toList();
         }
-        if (sectionData['deleted_items'] is List) {
-          _deletedItemsRows = (sectionData['deleted_items'] as List)
+        if (sectionData['approved_items'] is List) {
+          _approvedRows = (sectionData['approved_items'] as List)
               .map((item) => Map<String, String>.from(item))
               .toList();
         }
@@ -72,8 +82,10 @@ class _COSSectionState extends State<COSSection> {
     };
 
     if (_applicability == 'applicable') {
-      sectionData['added_items'] = _addedItemsRows;
-      sectionData['deleted_items'] = _deletedItemsRows;
+      sectionData['proposal_status'] = _proposalStatus;
+      sectionData['submitted_date'] = _submittedDate?.toIso8601String();
+      sectionData['under_consideration_items'] = _underConsiderationRows;
+      sectionData['approved_items'] = _approvedRows;
     }
 
     widget.onDataChanged({
@@ -100,19 +112,21 @@ class _COSSectionState extends State<COSSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Applicability',
+            'COS (Change of Scope):',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+
+          // Not applicable / Applicable
           Row(
             children: [
               Expanded(
                 child: RadioListTile<String>(
-                  title: const Text('N/A'),
+                  title: const Text('Not applicable'),
                   value: 'na',
                   groupValue: _applicability,
                   onChanged: (value) {
@@ -142,55 +156,142 @@ class _COSSectionState extends State<COSSection> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
 
-          // Conditional Tables (if applicable)
+          // If Applicable
           if (_applicability == 'applicable') ...[
-            // Added Items Table
-            const Text(
-              'Items Added',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            DynamicTableWidget(
-              columnHeaders: const ['Sr. No.', 'Item Description', 'Amount (Lakhs)'],
-              rows: _addedItemsRows,
-              onRowsChanged: (rows) {
-                setState(() {
-                  _addedItemsRows = rows;
-                  _notifyDataChanged();
-                });
-              },
-              addButtonLabel: 'Add Item',
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Deleted Items Table
-            const Text(
-              'Items Deleted',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            DynamicTableWidget(
-              columnHeaders: const ['Sr. No.', 'Item Description', 'Amount (Lakhs)'],
-              rows: _deletedItemsRows,
-              onRowsChanged: (rows) {
+            // Proposal Not started
+            RadioListTile<String>(
+              title: const Text('Proposal Not started'),
+              value: 'not_started',
+              groupValue: _proposalStatus,
+              onChanged: (value) {
                 setState(() {
-                  _deletedItemsRows = rows;
+                  _proposalStatus = value!;
                   _notifyDataChanged();
                 });
               },
-              addButtonLabel: 'Add Item',
+              dense: true,
+              contentPadding: EdgeInsets.zero,
             ),
+
+            // Proposal under Consideration with bell icon
+            Row(
+              children: [
+                Radio<String>(
+                  value: 'under_consideration',
+                  groupValue: _proposalStatus,
+                  onChanged: (value) {
+                    setState(() {
+                      _proposalStatus = value!;
+                      _notifyDataChanged();
+                    });
+                  },
+                ),
+                const Expanded(
+                  child: Text(
+                    'Proposal under Consideration',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+                CriticalBellIcon(
+                  projectId: widget.projectId,
+                  sectionName: 'COS',
+                  optionName: 'Proposal under Consideration',
+                ),
+              ],
+            ),
+            if (_proposalStatus == 'under_consideration') ...[
+              const SizedBox(height: 12),
+              DynamicTableWidget(
+                columnHeaders: const ['Sr. No.', 'Broad Items', 'Amount', 'Reasons'],
+                rows: _underConsiderationRows,
+                onRowsChanged: (rows) {
+                  setState(() {
+                    _underConsiderationRows = rows;
+                    _notifyDataChanged();
+                  });
+                },
+                addButtonLabel: 'Add Item',
+              ),
+            ],
+            const SizedBox(height: 8),
+
+            // Proposal Submitted: Date with bell icon
+            Row(
+              children: [
+                Radio<String>(
+                  value: 'submitted',
+                  groupValue: _proposalStatus,
+                  onChanged: (value) {
+                    setState(() {
+                      _proposalStatus = value!;
+                      _notifyDataChanged();
+                    });
+                  },
+                ),
+                const Text(
+                  'Proposal Submitted: Date',
+                  style: TextStyle(fontSize: 14),
+                ),
+                const SizedBox(width: 8),
+                CriticalBellIcon(
+                  projectId: widget.projectId,
+                  sectionName: 'COS',
+                  optionName: 'Proposal Submitted',
+                ),
+              ],
+            ),
+            if (_proposalStatus == 'submitted') ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.only(left: 24),
+                child: FormDatePicker(
+                  label: '',
+                  selectedDate: _submittedDate,
+                  onDateSelected: (date) {
+                    setState(() {
+                      _submittedDate = date;
+                      _notifyDataChanged();
+                    });
+                  },
+                ),
+              ),
+            ],
+            const SizedBox(height: 8),
+
+            // Proposal Approved
+            RadioListTile<String>(
+              title: const Text('Proposal Approved'),
+              value: 'approved',
+              groupValue: _proposalStatus,
+              onChanged: (value) {
+                setState(() {
+                  _proposalStatus = value!;
+                  _notifyDataChanged();
+                });
+              },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+            if (_proposalStatus == 'approved') ...[
+              const SizedBox(height: 12),
+              DynamicTableWidget(
+                columnHeaders: const ['Sr. No.', 'Broad Items', 'Amount', 'Reasons'],
+                rows: _approvedRows,
+                onRowsChanged: (rows) {
+                  setState(() {
+                    _approvedRows = rows;
+                    _notifyDataChanged();
+                  });
+                },
+                addButtonLabel: 'Add Item',
+              ),
+            ],
           ],
+
+          const SizedBox(height: 24),
 
           // Common Fields
           SectionCommonFields(

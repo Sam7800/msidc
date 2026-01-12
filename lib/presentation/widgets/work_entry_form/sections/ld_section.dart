@@ -23,11 +23,13 @@ class _LDSectionState extends State<LDSection> {
   late TextEditingController _personResponsibleController;
   late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
-  late TextEditingController _amountController;
-  late TextEditingController _reasonController;
+  late TextEditingController _amountImposedPerWeekController;
+  late TextEditingController _amountRecoveredController;
+  late TextEditingController _amountDepositedController;
+  late TextEditingController _amountReleasedController;
+  late TextEditingController _finalAmountRecoveredController;
 
   String _applicability = 'na'; // na or applicable
-  DateTime? _imposedDate;
 
   @override
   void initState() {
@@ -40,8 +42,11 @@ class _LDSectionState extends State<LDSection> {
     _personResponsibleController = TextEditingController();
     _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
-    _amountController = TextEditingController();
-    _reasonController = TextEditingController();
+    _amountImposedPerWeekController = TextEditingController();
+    _amountRecoveredController = TextEditingController();
+    _amountDepositedController = TextEditingController();
+    _amountReleasedController = TextEditingController();
+    _finalAmountRecoveredController = TextEditingController();
   }
 
   void _loadInitialData() {
@@ -55,11 +60,11 @@ class _LDSectionState extends State<LDSection> {
       _applicability = sectionData['applicability'] ?? 'na';
 
       if (_applicability == 'applicable') {
-        _amountController.text = sectionData['amount'] ?? '';
-        _reasonController.text = sectionData['reason'] ?? '';
-        if (sectionData['imposed_date'] != null) {
-          _imposedDate = DateTime.parse(sectionData['imposed_date']);
-        }
+        _amountImposedPerWeekController.text = sectionData['amount_imposed_per_week'] ?? '';
+        _amountRecoveredController.text = sectionData['amount_recovered'] ?? '';
+        _amountDepositedController.text = sectionData['amount_deposited'] ?? '';
+        _amountReleasedController.text = sectionData['amount_released'] ?? '';
+        _finalAmountRecoveredController.text = sectionData['final_amount_recovered'] ?? '';
       }
     }
   }
@@ -70,9 +75,11 @@ class _LDSectionState extends State<LDSection> {
     };
 
     if (_applicability == 'applicable') {
-      sectionData['amount'] = _amountController.text;
-      sectionData['imposed_date'] = _imposedDate?.toIso8601String();
-      sectionData['reason'] = _reasonController.text;
+      sectionData['amount_imposed_per_week'] = _amountImposedPerWeekController.text;
+      sectionData['amount_recovered'] = _amountRecoveredController.text;
+      sectionData['amount_deposited'] = _amountDepositedController.text;
+      sectionData['amount_released'] = _amountReleasedController.text;
+      sectionData['final_amount_recovered'] = _finalAmountRecoveredController.text;
     }
 
     widget.onDataChanged({
@@ -88,8 +95,11 @@ class _LDSectionState extends State<LDSection> {
     _personResponsibleController.dispose();
     _postHeldController.dispose();
     _pendingWithController.dispose();
-    _amountController.dispose();
-    _reasonController.dispose();
+    _amountImposedPerWeekController.dispose();
+    _amountRecoveredController.dispose();
+    _amountDepositedController.dispose();
+    _amountReleasedController.dispose();
+    _finalAmountRecoveredController.dispose();
     super.dispose();
   }
 
@@ -101,58 +111,60 @@ class _LDSectionState extends State<LDSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Applicability',
+            'LD (Liquidated Damages):',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('N/A'),
-                  value: 'na',
-                  groupValue: _applicability,
-                  onChanged: (value) {
-                    setState(() {
-                      _applicability = value!;
-                      _notifyDataChanged();
-                    });
-                  },
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('Applicable'),
-                  value: 'applicable',
-                  groupValue: _applicability,
-                  onChanged: (value) {
-                    setState(() {
-                      _applicability = value!;
-                      _notifyDataChanged();
-                    });
-                  },
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-          // Conditional Fields (if applicable)
+          // Not Applicable
+          RadioListTile<String>(
+            title: const Text('Not Applicable'),
+            value: 'na',
+            groupValue: _applicability,
+            onChanged: (value) {
+              setState(() {
+                _applicability = value!;
+                _notifyDataChanged();
+              });
+            },
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+
+          // Applicable
+          RadioListTile<String>(
+            title: const Text('Applicable'),
+            value: 'applicable',
+            groupValue: _applicability,
+            onChanged: (value) {
+              setState(() {
+                _applicability = value!;
+                _notifyDataChanged();
+              });
+            },
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+
+          // applicable fields
           if (_applicability == 'applicable') ...[
+            const SizedBox(height: 16),
+
+            // Amount imposed / per week
+            const Text(
+              'Amount imposed / per week',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
-              controller: _amountController,
+              controller: _amountImposedPerWeekController,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
-                labelText: 'LD Amount (in Lakhs)',
-                hintText: 'e.g., 10',
+                hintText: 'Enter amount',
                 prefixIcon: Icon(Icons.currency_rupee, size: 20),
                 border: OutlineInputBorder(),
               ),
@@ -160,31 +172,79 @@ class _LDSectionState extends State<LDSection> {
             ),
             const SizedBox(height: 16),
 
-            FormDatePicker(
-              label: 'Date Imposed',
-              selectedDate: _imposedDate,
-              onDateSelected: (date) {
-                setState(() {
-                  _imposedDate = date;
-                  _notifyDataChanged();
-                });
-              },
+            // Amount recovered
+            const Text(
+              'Amount recovered',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _amountRecoveredController,
+              onChanged: (_) => _notifyDataChanged(),
+              decoration: const InputDecoration(
+                hintText: 'Enter amount',
+                prefixIcon: Icon(Icons.currency_rupee, size: 20),
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
             ),
             const SizedBox(height: 16),
 
+            // Amount deposited in account
+            const Text(
+              'Amount deposited in account',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
-              controller: _reasonController,
+              controller: _amountDepositedController,
               onChanged: (_) => _notifyDataChanged(),
-              maxLines: 3,
               decoration: const InputDecoration(
-                labelText: 'Reason for LD',
-                hintText: 'Enter reason',
-                prefixIcon: Icon(Icons.notes, size: 20),
+                hintText: 'Enter amount',
+                prefixIcon: Icon(Icons.currency_rupee, size: 20),
                 border: OutlineInputBorder(),
-                alignLabelWithHint: true,
               ),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+            ),
+            const SizedBox(height: 16),
+
+            // Amount released after achievement of progress
+            const Text(
+              'Amount released after achievement of progress',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _amountReleasedController,
+              onChanged: (_) => _notifyDataChanged(),
+              decoration: const InputDecoration(
+                hintText: 'Enter amount',
+                prefixIcon: Icon(Icons.currency_rupee, size: 20),
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+            ),
+            const SizedBox(height: 16),
+
+            // Final amount recovered from Contractor
+            const Text(
+              'Final amount recovered from Contractor',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _finalAmountRecoveredController,
+              onChanged: (_) => _notifyDataChanged(),
+              decoration: const InputDecoration(
+                hintText: 'Enter amount',
+                prefixIcon: Icon(Icons.currency_rupee, size: 20),
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
             ),
           ],
+
+          const SizedBox(height: 24),
 
           // Common Fields
           SectionCommonFields(

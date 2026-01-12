@@ -4,7 +4,7 @@ import '../section_common_fields.dart';
 import '../form_date_picker.dart';
 
 /// Supplementary Agreement Section
-/// Radio: N/A or Applicable with conditional fields
+/// Radio: Not applicable or Applicable with conditional fields
 class SupplementaryAgreementSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
@@ -25,12 +25,13 @@ class _SupplementaryAgreementSectionState
   late TextEditingController _personResponsibleController;
   late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
-  late TextEditingController _agreementNoController;
+  late TextEditingController _necessityController;
   late TextEditingController _amountController;
-  late TextEditingController _remarksController;
+  late TextEditingController _scopeOfWorkController;
+  late TextEditingController _periodController;
 
   String _applicability = 'na'; // na or applicable
-  DateTime? _agreementDate;
+  DateTime? _dateSelected;
 
   @override
   void initState() {
@@ -43,9 +44,10 @@ class _SupplementaryAgreementSectionState
     _personResponsibleController = TextEditingController();
     _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
-    _agreementNoController = TextEditingController();
+    _necessityController = TextEditingController();
     _amountController = TextEditingController();
-    _remarksController = TextEditingController();
+    _scopeOfWorkController = TextEditingController();
+    _periodController = TextEditingController();
   }
 
   void _loadInitialData() {
@@ -59,11 +61,12 @@ class _SupplementaryAgreementSectionState
       _applicability = sectionData['applicability'] ?? 'na';
 
       if (_applicability == 'applicable') {
-        _agreementNoController.text = sectionData['agreement_no'] ?? '';
+        _necessityController.text = sectionData['necessity'] ?? '';
         _amountController.text = sectionData['amount'] ?? '';
-        _remarksController.text = sectionData['remarks'] ?? '';
-        if (sectionData['agreement_date'] != null) {
-          _agreementDate = DateTime.parse(sectionData['agreement_date']);
+        _scopeOfWorkController.text = sectionData['scope_of_work'] ?? '';
+        _periodController.text = sectionData['period'] ?? '';
+        if (sectionData['date'] != null) {
+          _dateSelected = DateTime.parse(sectionData['date']);
         }
       }
     }
@@ -75,10 +78,11 @@ class _SupplementaryAgreementSectionState
     };
 
     if (_applicability == 'applicable') {
-      sectionData['agreement_no'] = _agreementNoController.text;
-      sectionData['agreement_date'] = _agreementDate?.toIso8601String();
+      sectionData['necessity'] = _necessityController.text;
       sectionData['amount'] = _amountController.text;
-      sectionData['remarks'] = _remarksController.text;
+      sectionData['date'] = _dateSelected?.toIso8601String();
+      sectionData['scope_of_work'] = _scopeOfWorkController.text;
+      sectionData['period'] = _periodController.text;
     }
 
     widget.onDataChanged({
@@ -94,9 +98,10 @@ class _SupplementaryAgreementSectionState
     _personResponsibleController.dispose();
     _postHeldController.dispose();
     _pendingWithController.dispose();
-    _agreementNoController.dispose();
+    _necessityController.dispose();
     _amountController.dispose();
-    _remarksController.dispose();
+    _scopeOfWorkController.dispose();
+    _periodController.dispose();
     super.dispose();
   }
 
@@ -108,19 +113,21 @@ class _SupplementaryAgreementSectionState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Applicability',
+            'Supplementary Agreement:',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+
+          // Not applicable / Applicable
           Row(
             children: [
               Expanded(
                 child: RadioListTile<String>(
-                  title: const Text('N/A'),
+                  title: const Text('Not applicable'),
                   value: 'na',
                   groupValue: _applicability,
                   onChanged: (value) {
@@ -150,40 +157,39 @@ class _SupplementaryAgreementSectionState
               ),
             ],
           ),
-          const SizedBox(height: 24),
 
-          // Conditional Fields (if applicable)
+          // If Applicable
           if (_applicability == 'applicable') ...[
+            const SizedBox(height: 16),
+
+            // Necessity
+            const Text(
+              'Necessity',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
-              controller: _agreementNoController,
+              controller: _necessityController,
               onChanged: (_) => _notifyDataChanged(),
+              maxLines: 3,
               decoration: const InputDecoration(
-                labelText: 'Agreement Number',
-                hintText: 'e.g., "SA/2026/001"',
-                prefixIcon: Icon(Icons.confirmation_number, size: 20),
+                hintText: 'Enter necessity details',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
 
-            FormDatePicker(
-              label: 'Agreement Date',
-              selectedDate: _agreementDate,
-              onDateSelected: (date) {
-                setState(() {
-                  _agreementDate = date;
-                  _notifyDataChanged();
-                });
-              },
+            // Amount Rs. Lakhs
+            const Text(
+              'Amount Rs. Lakhs',
+              style: TextStyle(fontSize: 14),
             ),
-            const SizedBox(height: 16),
-
+            const SizedBox(height: 8),
             TextFormField(
               controller: _amountController,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
-                labelText: 'Additional Amount (in Lakhs)',
-                hintText: 'e.g., 50',
+                hintText: 'Enter amount',
                 prefixIcon: Icon(Icons.currency_rupee, size: 20),
                 border: OutlineInputBorder(),
               ),
@@ -191,19 +197,54 @@ class _SupplementaryAgreementSectionState
             ),
             const SizedBox(height: 16),
 
+            // Date
+            FormDatePicker(
+              label: 'Date',
+              selectedDate: _dateSelected,
+              onDateSelected: (date) {
+                setState(() {
+                  _dateSelected = date;
+                  _notifyDataChanged();
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Scope of work
+            const Text(
+              'Scope of work',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
-              controller: _remarksController,
+              controller: _scopeOfWorkController,
               onChanged: (_) => _notifyDataChanged(),
-              maxLines: 4,
+              maxLines: 3,
               decoration: const InputDecoration(
-                labelText: 'Remarks',
-                hintText: 'Enter purpose and details',
-                prefixIcon: Icon(Icons.notes, size: 20),
+                hintText: 'Enter scope of work',
                 border: OutlineInputBorder(),
-                alignLabelWithHint: true,
               ),
             ),
+            const SizedBox(height: 16),
+
+            // Period – (Months)
+            const Text(
+              'Period – (Months)',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _periodController,
+              onChanged: (_) => _notifyDataChanged(),
+              decoration: const InputDecoration(
+                hintText: 'Enter period in months',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+            ),
           ],
+
+          const SizedBox(height: 24),
 
           // Common Fields
           SectionCommonFields(

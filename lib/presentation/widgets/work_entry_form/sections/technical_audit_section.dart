@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
-import '../form_date_picker.dart';
 
 /// Technical Audit Section
-/// Radio: Not Done/Carried Out with conditional fields
+/// Radio: Not done/Carried Out with conditional fields
 class TechnicalAuditSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
@@ -23,12 +22,12 @@ class _TechnicalAuditSectionState extends State<TechnicalAuditSection> {
   late TextEditingController _personResponsibleController;
   late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
-  late TextEditingController _agencyController;
-  late TextEditingController _findingsController;
-  late TextEditingController _recommendationsController;
+  late TextEditingController _findingsCountController;
+  late TextEditingController _detailsOfFindingsController;
+  late TextEditingController _responsibleEEController;
+  late TextEditingController _complianceController;
 
   String _status = 'not_done'; // not_done or carried_out
-  DateTime? _auditDate;
 
   @override
   void initState() {
@@ -41,9 +40,10 @@ class _TechnicalAuditSectionState extends State<TechnicalAuditSection> {
     _personResponsibleController = TextEditingController();
     _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
-    _agencyController = TextEditingController();
-    _findingsController = TextEditingController();
-    _recommendationsController = TextEditingController();
+    _findingsCountController = TextEditingController();
+    _detailsOfFindingsController = TextEditingController();
+    _responsibleEEController = TextEditingController();
+    _complianceController = TextEditingController();
   }
 
   void _loadInitialData() {
@@ -57,12 +57,10 @@ class _TechnicalAuditSectionState extends State<TechnicalAuditSection> {
       _status = sectionData['status'] ?? 'not_done';
 
       if (_status == 'carried_out') {
-        _agencyController.text = sectionData['agency'] ?? '';
-        _findingsController.text = sectionData['findings'] ?? '';
-        _recommendationsController.text = sectionData['recommendations'] ?? '';
-        if (sectionData['audit_date'] != null) {
-          _auditDate = DateTime.parse(sectionData['audit_date']);
-        }
+        _findingsCountController.text = sectionData['findings_count'] ?? '';
+        _detailsOfFindingsController.text = sectionData['details_of_findings'] ?? '';
+        _responsibleEEController.text = sectionData['responsible_ee'] ?? '';
+        _complianceController.text = sectionData['compliance'] ?? '';
       }
     }
   }
@@ -73,10 +71,10 @@ class _TechnicalAuditSectionState extends State<TechnicalAuditSection> {
     };
 
     if (_status == 'carried_out') {
-      sectionData['audit_date'] = _auditDate?.toIso8601String();
-      sectionData['agency'] = _agencyController.text;
-      sectionData['findings'] = _findingsController.text;
-      sectionData['recommendations'] = _recommendationsController.text;
+      sectionData['findings_count'] = _findingsCountController.text;
+      sectionData['details_of_findings'] = _detailsOfFindingsController.text;
+      sectionData['responsible_ee'] = _responsibleEEController.text;
+      sectionData['compliance'] = _complianceController.text;
     }
 
     widget.onDataChanged({
@@ -92,9 +90,10 @@ class _TechnicalAuditSectionState extends State<TechnicalAuditSection> {
     _personResponsibleController.dispose();
     _postHeldController.dispose();
     _pendingWithController.dispose();
-    _agencyController.dispose();
-    _findingsController.dispose();
-    _recommendationsController.dispose();
+    _findingsCountController.dispose();
+    _detailsOfFindingsController.dispose();
+    _responsibleEEController.dispose();
+    _complianceController.dispose();
     super.dispose();
   }
 
@@ -106,19 +105,21 @@ class _TechnicalAuditSectionState extends State<TechnicalAuditSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Audit Status',
+            'Technical Audit:',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+
+          // Not done / Carried Out
           Row(
             children: [
               Expanded(
                 child: RadioListTile<String>(
-                  title: const Text('Not Done'),
+                  title: const Text('Not done'),
                   value: 'not_done',
                   groupValue: _status,
                   onChanged: (value) {
@@ -148,61 +149,78 @@ class _TechnicalAuditSectionState extends State<TechnicalAuditSection> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
 
-          // Conditional Fields (if carried out)
+          // If Applicable (Carried Out)
           if (_status == 'carried_out') ...[
-            FormDatePicker(
-              label: 'Audit Date',
-              selectedDate: _auditDate,
-              onDateSelected: (date) {
-                setState(() {
-                  _auditDate = date;
-                  _notifyDataChanged();
-                });
-              },
+            const SizedBox(height: 16),
+
+            // # of findings
+            const Text(
+              '# of findings',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _findingsCountController,
+              onChanged: (_) => _notifyDataChanged(),
+              decoration: const InputDecoration(
+                hintText: 'Enter number',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
 
+            // Details of findings
+            const Text(
+              'Details of findings',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
-              controller: _agencyController,
+              controller: _detailsOfFindingsController,
               onChanged: (_) => _notifyDataChanged(),
+              maxLines: 3,
               decoration: const InputDecoration(
-                labelText: 'Audit Agency',
-                hintText: 'Enter agency name',
-                prefixIcon: Icon(Icons.business, size: 20),
+                hintText: 'Enter details',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
 
+            // Responsible EE
+            const Text(
+              'Responsible EE',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
-              controller: _findingsController,
+              controller: _responsibleEEController,
               onChanged: (_) => _notifyDataChanged(),
-              maxLines: 4,
               decoration: const InputDecoration(
-                labelText: 'Key Findings',
-                hintText: 'Enter audit findings',
-                prefixIcon: Icon(Icons.find_in_page, size: 20),
+                hintText: 'Enter name',
                 border: OutlineInputBorder(),
-                alignLabelWithHint: true,
               ),
             ),
             const SizedBox(height: 16),
 
+            // Compliance Submitted: # and Dates
+            const Text(
+              'Compliance Submitted: # and Dates',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
-              controller: _recommendationsController,
+              controller: _complianceController,
               onChanged: (_) => _notifyDataChanged(),
-              maxLines: 4,
               decoration: const InputDecoration(
-                labelText: 'Recommendations',
-                hintText: 'Enter recommendations',
-                prefixIcon: Icon(Icons.recommend, size: 20),
+                hintText: 'Enter details',
                 border: OutlineInputBorder(),
-                alignLabelWithHint: true,
               ),
             ),
           ],
+
+          const SizedBox(height: 24),
 
           // Common Fields
           SectionCommonFields(

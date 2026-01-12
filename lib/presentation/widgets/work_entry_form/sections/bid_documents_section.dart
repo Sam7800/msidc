@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../form_date_picker.dart';
+import '../critical_bell_icon.dart';
 
 /// Bid Documents Section
 /// Status checkboxes with conditional date picker
 class BidDocumentsSection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const BidDocumentsSection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -30,7 +33,8 @@ class _BidDocumentsSectionState extends State<BidDocumentsSection> {
   final List<Map<String, String>> _statusOptions = [
     {'value': 'not_started', 'label': 'Not Started'},
     {'value': 'in_progress', 'label': 'In Progress'},
-    {'value': 'completed', 'label': 'Completed'},
+    {'value': 'submitted', 'label': 'Submitted'},
+    {'value': 'approved', 'label': 'Approved'},
   ];
 
   @override
@@ -103,20 +107,44 @@ class _BidDocumentsSectionState extends State<BidDocumentsSection> {
 
           ..._statusOptions.map((option) {
             final isSelected = _selectedStatus == option['value'];
-            return CheckboxListTile(
-              title: Text(option['label']!),
-              value: isSelected,
-              onChanged: (checked) {
-                if (checked == true) {
-                  setState(() {
-                    _selectedStatus = option['value']!;
-                    _notifyDataChanged();
-                  });
-                }
-              },
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
+            final showBellIcon = option['value'] == 'submitted'; // Only show bell on Submitted
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Checkbox(
+                    value: isSelected,
+                    onChanged: (checked) {
+                      if (checked == true) {
+                        setState(() {
+                          _selectedStatus = option['value']!;
+                          _notifyDataChanged();
+                        });
+                      }
+                    },
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedStatus = option['value']!;
+                          _notifyDataChanged();
+                        });
+                      },
+                      child: Text(
+                        option['label']!,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  ),
+                  if (showBellIcon)
+                    CriticalBellIcon(
+                      projectId: widget.projectId,
+                      sectionName: 'Bid Documents',
+                      optionName: option['label']!,
+                    ),
+                ],
+              ),
             );
           }),
 

@@ -23,18 +23,14 @@ class _FinancialBidSectionState extends State<FinancialBidSection> {
   late TextEditingController _personResponsibleController;
   late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
-  late TextEditingController _l1BidderController;
-  late TextEditingController _l1AmountController;
+  late TextEditingController _qualifiedBiddersController;
+  late TextEditingController _offerAmountController;
+  late TextEditingController _percentageAboveBelowController;
 
   DateTime? _openingDate;
-  String _recommendedBidder = 'l1'; // l1, l2, l3, other
+  String _l1h1Offer = 'L1'; // L1 or H1
 
-  final List<Map<String, String>> _bidderOptions = [
-    {'value': 'l1', 'label': 'L1 Bidder'},
-    {'value': 'l2', 'label': 'L2 Bidder'},
-    {'value': 'l3', 'label': 'L3 Bidder'},
-    {'value': 'other', 'label': 'Other'},
-  ];
+  final List<String> _offerOptions = ['L1', 'H1'];
 
   @override
   void initState() {
@@ -47,8 +43,9 @@ class _FinancialBidSectionState extends State<FinancialBidSection> {
     _personResponsibleController = TextEditingController();
     _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
-    _l1BidderController = TextEditingController();
-    _l1AmountController = TextEditingController();
+    _qualifiedBiddersController = TextEditingController();
+    _offerAmountController = TextEditingController();
+    _percentageAboveBelowController = TextEditingController();
   }
 
   void _loadInitialData() {
@@ -59,9 +56,10 @@ class _FinancialBidSectionState extends State<FinancialBidSection> {
       _pendingWithController.text = widget.initialData['pending_with'] ?? '';
 
       final sectionData = widget.initialData['section_data'] ?? {};
-      _l1BidderController.text = sectionData['l1_bidder'] ?? '';
-      _l1AmountController.text = sectionData['l1_amount'] ?? '';
-      _recommendedBidder = sectionData['recommended_bidder'] ?? 'l1';
+      _qualifiedBiddersController.text = sectionData['qualified_bidders'] ?? '';
+      _l1h1Offer = sectionData['l1h1_offer'] ?? 'L1';
+      _offerAmountController.text = sectionData['offer_amount'] ?? '';
+      _percentageAboveBelowController.text = sectionData['percentage_above_below'] ?? '';
 
       if (sectionData['opening_date'] != null) {
         _openingDate = DateTime.parse(sectionData['opening_date']);
@@ -76,9 +74,10 @@ class _FinancialBidSectionState extends State<FinancialBidSection> {
       'pending_with': _pendingWithController.text,
       'section_data': {
         'opening_date': _openingDate?.toIso8601String(),
-        'l1_bidder': _l1BidderController.text,
-        'l1_amount': _l1AmountController.text,
-        'recommended_bidder': _recommendedBidder,
+        'qualified_bidders': _qualifiedBiddersController.text,
+        'l1h1_offer': _l1h1Offer,
+        'offer_amount': _offerAmountController.text,
+        'percentage_above_below': _percentageAboveBelowController.text,
       },
     });
   }
@@ -88,8 +87,9 @@ class _FinancialBidSectionState extends State<FinancialBidSection> {
     _personResponsibleController.dispose();
     _postHeldController.dispose();
     _pendingWithController.dispose();
-    _l1BidderController.dispose();
-    _l1AmountController.dispose();
+    _qualifiedBiddersController.dispose();
+    _offerAmountController.dispose();
+    _percentageAboveBelowController.dispose();
     super.dispose();
   }
 
@@ -100,8 +100,18 @@ class _FinancialBidSectionState extends State<FinancialBidSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Text(
+            'Financial Bid:',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 16),
+
           FormDatePicker(
-            label: 'Financial Bid Opening Date',
+            label: 'Date',
             selectedDate: _openingDate,
             onDateSelected: (date) {
               setState(() {
@@ -110,61 +120,129 @@ class _FinancialBidSectionState extends State<FinancialBidSection> {
               });
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
+
+          const Text(
+            '1. # of qualified bidders participated',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
 
           TextFormField(
-            controller: _l1BidderController,
+            controller: _qualifiedBiddersController,
             onChanged: (_) => _notifyDataChanged(),
             decoration: const InputDecoration(
-              labelText: 'L1 Bidder Name',
-              hintText: 'Enter bidder name',
-              prefixIcon: Icon(Icons.business, size: 20),
+              hintText: 'Enter number',
+              prefixIcon: Icon(Icons.people, size: 20),
               border: OutlineInputBorder(),
+            ),
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 24),
+
+          const Text(
+            '2. Bids opened –',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
 
+          // i) L1 / H1 offer
+          Row(
+            children: [
+              const SizedBox(width: 24),
+              const Text(
+                'i) L1 / H1 offer',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          DropdownButtonFormField<String>(
+            value: _l1h1Offer,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            items: _offerOptions.map((option) {
+              return DropdownMenuItem(
+                value: option,
+                child: Text(option),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _l1h1Offer = value!;
+                _notifyDataChanged();
+              });
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // ii) Offer amount
+          Row(
+            children: [
+              const SizedBox(width: 24),
+              const Expanded(
+                child: Text(
+                  'ii) Offer amount: Rs. Lakhs / Cr',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
           TextFormField(
-            controller: _l1AmountController,
+            controller: _offerAmountController,
             onChanged: (_) => _notifyDataChanged(),
             decoration: const InputDecoration(
-              labelText: 'L1 Bid Amount (in Lakhs)',
-              hintText: 'e.g., 450',
+              hintText: 'Enter amount',
               prefixIcon: Icon(Icons.currency_rupee, size: 20),
               border: OutlineInputBorder(),
             ),
             keyboardType: TextInputType.numberWithOptions(decimal: true),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-          const Text(
-            'Recommended Bidder',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
+          // iii) % above / below
+          Row(
+            children: [
+              const SizedBox(width: 24),
+              const Text(
+                'iii) % above / below',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
 
-          DropdownButtonFormField<String>(
-            value: _recommendedBidder,
+          TextFormField(
+            controller: _percentageAboveBelowController,
+            onChanged: (_) => _notifyDataChanged(),
             decoration: const InputDecoration(
+              hintText: 'e.g., +5% or -3%',
+              prefixIcon: Icon(Icons.percent, size: 20),
               border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.recommend, size: 20),
             ),
-            items: _bidderOptions.map((option) {
-              return DropdownMenuItem(
-                value: option['value'],
-                child: Text(option['label']!),
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                _recommendedBidder = value!;
-                _notifyDataChanged();
-              });
-            },
+            keyboardType: TextInputType.text,
           ),
 
           // Common Fields

@@ -3,15 +3,18 @@ import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../form_date_picker.dart';
 import '../dynamic_table_widget.dart';
+import '../critical_bell_icon.dart';
 
 /// TS Section - Technical Sanction
-/// Radio: Awaited/Accorded with conditional table
+/// Radio: Awaited/Accorded with status and conditional table
 class TSSection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const TSSection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -24,13 +27,20 @@ class _TSSectionState extends State<TSSection> {
   late TextEditingController _personResponsibleController;
   late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
-  late TextEditingController _pendingWithWhomController;
+  late TextEditingController _statusController;
   late TextEditingController _tsNoController;
+  late TextEditingController _amountController;
 
   String _selectedType = 'awaited'; // awaited or accorded
-  DateTime? _dateOfProposal;
+  String _selectedStatus = 'not_started'; // Status when awaited: not_started or in_progress
+  DateTime? _likelySubmissionDate;
   DateTime? _dateAccorded;
   List<Map<String, String>> _tableRows = [];
+
+  final List<Map<String, String>> _awaitedStatusOptions = [
+    {'value': 'not_started', 'label': 'Not started'},
+    {'value': 'in_progress', 'label': 'In Progress'},
+  ];
 
   @override
   void initState() {
@@ -43,8 +53,9 @@ class _TSSectionState extends State<TSSection> {
     _personResponsibleController = TextEditingController();
     _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
-    _pendingWithWhomController = TextEditingController();
+    _statusController = TextEditingController();
     _tsNoController = TextEditingController();
+    _amountController = TextEditingController();
   }
 
   void _loadInitialData() {
@@ -56,14 +67,15 @@ class _TSSectionState extends State<TSSection> {
 
       final sectionData = widget.initialData['section_data'] ?? {};
       _selectedType = sectionData['type'] ?? 'awaited';
+      _selectedStatus = sectionData['status'] ?? 'not_started';
 
       if (_selectedType == 'awaited') {
-        _pendingWithWhomController.text =
-            sectionData['pending_with_whom'] ?? '';
-        if (sectionData['date_of_proposal'] != null) {
-          _dateOfProposal = DateTime.parse(sectionData['date_of_proposal']);
+        _statusController.text = sectionData['status_text'] ?? '';
+        if (sectionData['likely_submission_date'] != null) {
+          _likelySubmissionDate = DateTime.parse(sectionData['likely_submission_date']);
         }
       } else {
+        _amountController.text = sectionData['amount'] ?? '';
         _tsNoController.text = sectionData['ts_no'] ?? '';
         if (sectionData['date'] != null) {
           _dateAccorded = DateTime.parse(sectionData['date']);
@@ -83,9 +95,11 @@ class _TSSectionState extends State<TSSection> {
     };
 
     if (_selectedType == 'awaited') {
-      sectionData['date_of_proposal'] = _dateOfProposal?.toIso8601String();
-      sectionData['pending_with_whom'] = _pendingWithWhomController.text;
+      sectionData['status'] = _selectedStatus;
+      sectionData['likely_submission_date'] = _likelySubmissionDate?.toIso8601String();
+      sectionData['status_text'] = _statusController.text;
     } else {
+      sectionData['amount'] = _amountController.text;
       sectionData['ts_no'] = _tsNoController.text;
       sectionData['date'] = _dateAccorded?.toIso8601String();
       sectionData['items'] = _tableRows;
@@ -104,8 +118,9 @@ class _TSSectionState extends State<TSSection> {
     _personResponsibleController.dispose();
     _postHeldController.dispose();
     _pendingWithController.dispose();
-    _pendingWithWhomController.dispose();
+    _statusController.dispose();
     _tsNoController.dispose();
+    _amountController.dispose();
     super.dispose();
   }
 
@@ -164,36 +179,97 @@ class _TSSectionState extends State<TSSection> {
 
           // Conditional Fields based on type
           if (_selectedType == 'awaited') ...[
-            // Awaited Fields
-            FormDatePicker(
-              label: 'Date of Proposal',
-              selectedDate: _dateOfProposal,
-              onDateSelected: (date) {
-                setState(() {
-                  _dateOfProposal = date;
-                  _notifyDataChanged();
-                });
-              },
-            ),
-            const SizedBox(height: 16),
+            // Status Selection for Awaited
+            ..._awaitedStatusOptions.map((option) {
+              final isSelected = _selectedStatus == option['value'];
+              final showBellIcon = option['value'] == 'in_progress'; // Only show bell on In Progress
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: isSelected,
+                      onChanged: (checked) {
+                        if (checked == true) {
+                          setState(() {
+                            _selectedStatus = option['value']!;
+                            _notifyDataChanged();
+                          });
+                        }
+                      },
+                    ),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedStatus = option['value']!;
+                            _notifyDataChanged();
+                          });
+                        },
+                        child: Text(
+                          option['label']!,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    ),
+                    if (showBellIcon)
+                      CriticalBellIcon(
+                        projectId: widget.projectId,
+                        sectionName: 'TS',
+                        optionName: option['label']!,
+                      ),
+                  ],
+                ),
+              );
+            }),
 
+            const SizedBox(height: 24),
+
+            // Show Likely Date picker only when In Progress is selected
+            if (_selectedStatus == 'in_progress') ...[
+              FormDatePicker(
+                label: 'Likely Date of Submission',
+                selectedDate: _likelySubmissionDate,
+                onDateSelected: (date) {
+                  setState(() {
+                    _likelySubmissionDate = date;
+                    _notifyDataChanged();
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Status textfield (always show)
             TextFormField(
-              controller: _pendingWithWhomController,
+              controller: _statusController,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
-                labelText: 'Pending With Whom',
-                hintText: 'e.g., "Director"',
-                prefixIcon: Icon(Icons.person_search, size: 20),
+                labelText: 'Status',
+                hintText: 'Enter current status',
+                prefixIcon: Icon(Icons.info_outline, size: 20),
                 border: OutlineInputBorder(),
               ),
             ),
           ] else ...[
             // Accorded Fields
             TextFormField(
+              controller: _amountController,
+              onChanged: (_) => _notifyDataChanged(),
+              decoration: const InputDecoration(
+                labelText: 'Amount (Rs. Crore / Lakhs)',
+                hintText: 'e.g., 450 Lakhs or 45 Crore',
+                prefixIcon: Icon(Icons.currency_rupee, size: 20),
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            TextFormField(
               controller: _tsNoController,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
-                labelText: 'TS Number',
+                labelText: 'TS No.',
                 hintText: 'e.g., "TS/2026/001"',
                 prefixIcon: Icon(Icons.confirmation_number, size: 20),
                 border: OutlineInputBorder(),
@@ -213,9 +289,9 @@ class _TSSectionState extends State<TSSection> {
             ),
             const SizedBox(height: 24),
 
-            // Sanctioned Items Table
+            // Detailed Scope Table
             const Text(
-              'Sanctioned Items',
+              'Detailed Scope',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -224,7 +300,7 @@ class _TSSectionState extends State<TSSection> {
             ),
             const SizedBox(height: 12),
             DynamicTableWidget(
-              columnHeaders: const ['Sr. No.', 'Item Description', 'Amount (Lakhs)'],
+              columnHeaders: const ['Sr. No.', 'Broad Items', 'Amount'],
               rows: _tableRows,
               onRowsChanged: (rows) {
                 setState(() {

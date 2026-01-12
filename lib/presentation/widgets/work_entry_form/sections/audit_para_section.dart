@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../dynamic_table_widget.dart';
+import '../critical_bell_icon.dart';
 
 /// Audit Para Section
-/// Radio: N/A or Applicable with count + 3 tables
+/// Radio: Not applicable or Applicable with tables
 class AuditParaSection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const AuditParaSection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -23,12 +26,13 @@ class _AuditParaSectionState extends State<AuditParaSection> {
   late TextEditingController _personResponsibleController;
   late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
-  late TextEditingController _paraCountController;
+  late TextEditingController _draftParasController;
+  late TextEditingController _responsiblePersonController;
 
   String _applicability = 'na'; // na or applicable
-  List<Map<String, String>> _paraDetailsRows = [];
-  List<Map<String, String>> _complianceRows = [];
-  List<Map<String, String>> _statusRows = [];
+  List<Map<String, String>> _detailsOfParasRows = [];
+  List<Map<String, String>> _repliesSubmittedRows = [];
+  List<Map<String, String>> _parasClosedRows = [];
 
   @override
   void initState() {
@@ -41,7 +45,8 @@ class _AuditParaSectionState extends State<AuditParaSection> {
     _personResponsibleController = TextEditingController();
     _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
-    _paraCountController = TextEditingController();
+    _draftParasController = TextEditingController();
+    _responsiblePersonController = TextEditingController();
   }
 
   void _loadInitialData() {
@@ -55,19 +60,21 @@ class _AuditParaSectionState extends State<AuditParaSection> {
       _applicability = sectionData['applicability'] ?? 'na';
 
       if (_applicability == 'applicable') {
-        _paraCountController.text = sectionData['para_count']?.toString() ?? '';
-        if (sectionData['para_details'] is List) {
-          _paraDetailsRows = (sectionData['para_details'] as List)
+        _draftParasController.text = sectionData['draft_paras'] ?? '';
+        _responsiblePersonController.text = sectionData['responsible_person'] ?? '';
+
+        if (sectionData['details_of_paras'] is List) {
+          _detailsOfParasRows = (sectionData['details_of_paras'] as List)
               .map((item) => Map<String, String>.from(item))
               .toList();
         }
-        if (sectionData['compliance'] is List) {
-          _complianceRows = (sectionData['compliance'] as List)
+        if (sectionData['replies_submitted'] is List) {
+          _repliesSubmittedRows = (sectionData['replies_submitted'] as List)
               .map((item) => Map<String, String>.from(item))
               .toList();
         }
-        if (sectionData['status'] is List) {
-          _statusRows = (sectionData['status'] as List)
+        if (sectionData['paras_closed'] is List) {
+          _parasClosedRows = (sectionData['paras_closed'] as List)
               .map((item) => Map<String, String>.from(item))
               .toList();
         }
@@ -81,10 +88,11 @@ class _AuditParaSectionState extends State<AuditParaSection> {
     };
 
     if (_applicability == 'applicable') {
-      sectionData['para_count'] = _paraCountController.text;
-      sectionData['para_details'] = _paraDetailsRows;
-      sectionData['compliance'] = _complianceRows;
-      sectionData['status'] = _statusRows;
+      sectionData['draft_paras'] = _draftParasController.text;
+      sectionData['responsible_person'] = _responsiblePersonController.text;
+      sectionData['details_of_paras'] = _detailsOfParasRows;
+      sectionData['replies_submitted'] = _repliesSubmittedRows;
+      sectionData['paras_closed'] = _parasClosedRows;
     }
 
     widget.onDataChanged({
@@ -100,7 +108,8 @@ class _AuditParaSectionState extends State<AuditParaSection> {
     _personResponsibleController.dispose();
     _postHeldController.dispose();
     _pendingWithController.dispose();
-    _paraCountController.dispose();
+    _draftParasController.dispose();
+    _responsiblePersonController.dispose();
     super.dispose();
   }
 
@@ -112,19 +121,21 @@ class _AuditParaSectionState extends State<AuditParaSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Applicability',
+            'Audit Para:',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+
+          // Not applicable / Applicable
           Row(
             children: [
               Expanded(
                 child: RadioListTile<String>(
-                  title: const Text('N/A'),
+                  title: const Text('Not applicable'),
                   value: 'na',
                   groupValue: _applicability,
                   onChanged: (value) {
@@ -154,91 +165,125 @@ class _AuditParaSectionState extends State<AuditParaSection> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
 
-          // Conditional Fields (if applicable)
+          // If Applicable
           if (_applicability == 'applicable') ...[
+            const SizedBox(height: 16),
+
+            // # of draft paras
+            const Text(
+              '# of draft paras',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
-              controller: _paraCountController,
+              controller: _draftParasController,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
-                labelText: 'Number of Audit Paras',
-                hintText: 'e.g., 5',
-                prefixIcon: Icon(Icons.numbers, size: 20),
+                hintText: 'Enter number',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Para Details Table
+            // Details of paras
             const Text(
-              'Para Details',
+              'Details of paras',
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
             DynamicTableWidget(
-              columnHeaders: const ['Para No.', 'Description', 'Amount'],
-              rows: _paraDetailsRows,
+              columnHeaders: const ['Sr. No.', 'Para Short Description', 'Date of issue', 'Remarks'],
+              rows: _detailsOfParasRows,
               onRowsChanged: (rows) {
                 setState(() {
-                  _paraDetailsRows = rows;
+                  _detailsOfParasRows = rows;
                   _notifyDataChanged();
                 });
               },
               addButtonLabel: 'Add Para',
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Compliance Table
+            // Responsible person for replies
             const Text(
-              'Compliance Status',
+              'Responsible person for replies',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _responsiblePersonController,
+              onChanged: (_) => _notifyDataChanged(),
+              decoration: const InputDecoration(
+                hintText: 'Enter name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Replies Submitted with bell icon
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Replies Submitted: # and Dates',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                CriticalBellIcon(
+                  projectId: widget.projectId,
+                  sectionName: 'Audit Para',
+                  optionName: 'Replies Submitted',
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            DynamicTableWidget(
+              columnHeaders: const ['Sr. No.', 'Para Short Description', 'Date of submission', 'Status'],
+              rows: _repliesSubmittedRows,
+              onRowsChanged: (rows) {
+                setState(() {
+                  _repliesSubmittedRows = rows;
+                  _notifyDataChanged();
+                });
+              },
+              addButtonLabel: 'Add Reply',
+            ),
+            const SizedBox(height: 16),
+
+            // Paras Closed
+            const Text(
+              'Paras Closed',
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
             DynamicTableWidget(
-              columnHeaders: const ['Para No.', 'Action Taken', 'Date'],
-              rows: _complianceRows,
+              columnHeaders: const ['Sr. No.', 'Para Short Description', 'Date of Closure', 'Remarks'],
+              rows: _parasClosedRows,
               onRowsChanged: (rows) {
                 setState(() {
-                  _complianceRows = rows;
+                  _parasClosedRows = rows;
                   _notifyDataChanged();
                 });
               },
-              addButtonLabel: 'Add Compliance',
-            ),
-            const SizedBox(height: 24),
-
-            // Status Table
-            const Text(
-              'Current Status',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            DynamicTableWidget(
-              columnHeaders: const ['Para No.', 'Status', 'Remarks'],
-              rows: _statusRows,
-              onRowsChanged: (rows) {
-                setState(() {
-                  _statusRows = rows;
-                  _notifyDataChanged();
-                });
-              },
-              addButtonLabel: 'Add Status',
+              addButtonLabel: 'Add Closed Para',
             ),
           ],
+
+          const SizedBox(height: 24),
 
           // Common Fields
           SectionCommonFields(

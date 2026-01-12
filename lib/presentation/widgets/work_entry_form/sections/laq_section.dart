@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../dynamic_table_widget.dart';
+import '../critical_bell_icon.dart';
 
 /// LAQ Section - Legislative Assembly Questions
-/// Radio: N/A or Applicable with counts + 4 tables
+/// Radio: Not applicable or Applicable with 4 tables
 class LAQSection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const LAQSection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -23,14 +26,14 @@ class _LAQSectionState extends State<LAQSection> {
   late TextEditingController _personResponsibleController;
   late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
-  late TextEditingController _totalQuestionsController;
-  late TextEditingController _pendingQuestionsController;
+  late TextEditingController _laqCountController;
+  late TextEditingController _responsiblePersonController;
 
   String _applicability = 'na'; // na or applicable
-  List<Map<String, String>> _questionsRows = [];
-  List<Map<String, String>> _responsesRows = [];
-  List<Map<String, String>> _followUpRows = [];
-  List<Map<String, String>> _statusRows = [];
+  List<Map<String, String>> _detailsOfQuestionsRows = [];
+  List<Map<String, String>> _repliesSubmittedRows = [];
+  List<Map<String, String>> _promisesGivenRows = [];
+  List<Map<String, String>> _promisesComplianceRows = [];
 
   @override
   void initState() {
@@ -43,8 +46,8 @@ class _LAQSectionState extends State<LAQSection> {
     _personResponsibleController = TextEditingController();
     _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
-    _totalQuestionsController = TextEditingController();
-    _pendingQuestionsController = TextEditingController();
+    _laqCountController = TextEditingController();
+    _responsiblePersonController = TextEditingController();
   }
 
   void _loadInitialData() {
@@ -58,26 +61,26 @@ class _LAQSectionState extends State<LAQSection> {
       _applicability = sectionData['applicability'] ?? 'na';
 
       if (_applicability == 'applicable') {
-        _totalQuestionsController.text = sectionData['total_questions']?.toString() ?? '';
-        _pendingQuestionsController.text = sectionData['pending_questions']?.toString() ?? '';
+        _laqCountController.text = sectionData['laq_count'] ?? '';
+        _responsiblePersonController.text = sectionData['responsible_person'] ?? '';
 
-        if (sectionData['questions'] is List) {
-          _questionsRows = (sectionData['questions'] as List)
+        if (sectionData['details_of_questions'] is List) {
+          _detailsOfQuestionsRows = (sectionData['details_of_questions'] as List)
               .map((item) => Map<String, String>.from(item))
               .toList();
         }
-        if (sectionData['responses'] is List) {
-          _responsesRows = (sectionData['responses'] as List)
+        if (sectionData['replies_submitted'] is List) {
+          _repliesSubmittedRows = (sectionData['replies_submitted'] as List)
               .map((item) => Map<String, String>.from(item))
               .toList();
         }
-        if (sectionData['follow_up'] is List) {
-          _followUpRows = (sectionData['follow_up'] as List)
+        if (sectionData['promises_given'] is List) {
+          _promisesGivenRows = (sectionData['promises_given'] as List)
               .map((item) => Map<String, String>.from(item))
               .toList();
         }
-        if (sectionData['status'] is List) {
-          _statusRows = (sectionData['status'] as List)
+        if (sectionData['promises_compliance'] is List) {
+          _promisesComplianceRows = (sectionData['promises_compliance'] as List)
               .map((item) => Map<String, String>.from(item))
               .toList();
         }
@@ -91,12 +94,12 @@ class _LAQSectionState extends State<LAQSection> {
     };
 
     if (_applicability == 'applicable') {
-      sectionData['total_questions'] = _totalQuestionsController.text;
-      sectionData['pending_questions'] = _pendingQuestionsController.text;
-      sectionData['questions'] = _questionsRows;
-      sectionData['responses'] = _responsesRows;
-      sectionData['follow_up'] = _followUpRows;
-      sectionData['status'] = _statusRows;
+      sectionData['laq_count'] = _laqCountController.text;
+      sectionData['responsible_person'] = _responsiblePersonController.text;
+      sectionData['details_of_questions'] = _detailsOfQuestionsRows;
+      sectionData['replies_submitted'] = _repliesSubmittedRows;
+      sectionData['promises_given'] = _promisesGivenRows;
+      sectionData['promises_compliance'] = _promisesComplianceRows;
     }
 
     widget.onDataChanged({
@@ -112,8 +115,8 @@ class _LAQSectionState extends State<LAQSection> {
     _personResponsibleController.dispose();
     _postHeldController.dispose();
     _pendingWithController.dispose();
-    _totalQuestionsController.dispose();
-    _pendingQuestionsController.dispose();
+    _laqCountController.dispose();
+    _responsiblePersonController.dispose();
     super.dispose();
   }
 
@@ -125,19 +128,21 @@ class _LAQSectionState extends State<LAQSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Applicability',
+            'LAQ (Legislative Questions):',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+
+          // Not applicable / Applicable
           Row(
             children: [
               Expanded(
                 child: RadioListTile<String>(
-                  title: const Text('N/A'),
+                  title: const Text('Not applicable'),
                   value: 'na',
                   groupValue: _applicability,
                   onChanged: (value) {
@@ -167,134 +172,148 @@ class _LAQSectionState extends State<LAQSection> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
 
-          // Conditional Fields (if applicable)
+          // If Applicable
           if (_applicability == 'applicable') ...[
+            const SizedBox(height: 16),
+
+            // # of LAQs / LCQs / Lakshvwdhi / Others
+            const Text(
+              '# of LAQs / LCQs / Lakshvwdhi / Others',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _laqCountController,
+              onChanged: (_) => _notifyDataChanged(),
+              decoration: const InputDecoration(
+                hintText: 'Enter number',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 16),
+
+            // Details of Questions with bell icon
             Row(
               children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _totalQuestionsController,
-                    onChanged: (_) => _notifyDataChanged(),
-                    decoration: const InputDecoration(
-                      labelText: 'Total Questions',
-                      hintText: 'e.g., 10',
-                      prefixIcon: Icon(Icons.question_answer, size: 20),
-                      border: OutlineInputBorder(),
+                const Expanded(
+                  child: Text(
+                    'Details of Questions',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
                     ),
-                    keyboardType: TextInputType.number,
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextFormField(
-                    controller: _pendingQuestionsController,
-                    onChanged: (_) => _notifyDataChanged(),
-                    decoration: const InputDecoration(
-                      labelText: 'Pending Questions',
-                      hintText: 'e.g., 3',
-                      prefixIcon: Icon(Icons.pending, size: 20),
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
+                CriticalBellIcon(
+                  projectId: widget.projectId,
+                  sectionName: 'LAQ',
+                  optionName: 'Details of Questions',
                 ),
               ],
             ),
-            const SizedBox(height: 24),
-
-            // Questions Table
-            const Text(
-              'Questions List',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
             const SizedBox(height: 12),
             DynamicTableWidget(
-              columnHeaders: const ['Q. No.', 'Question', 'Date Received'],
-              rows: _questionsRows,
+              columnHeaders: const ['Sr. No.', 'LAQ / LCQ No.', 'Date of Question', 'Remarks'],
+              rows: _detailsOfQuestionsRows,
               onRowsChanged: (rows) {
                 setState(() {
-                  _questionsRows = rows;
+                  _detailsOfQuestionsRows = rows;
                   _notifyDataChanged();
                 });
               },
               addButtonLabel: 'Add Question',
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Responses Table
+            // Responsible person for replies
             const Text(
-              'Responses',
+              'Responsible person for replies',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _responsiblePersonController,
+              onChanged: (_) => _notifyDataChanged(),
+              decoration: const InputDecoration(
+                hintText: 'Enter name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Replies Submitted: # and Dates
+            const Text(
+              'Replies Submitted: # and Dates',
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
             DynamicTableWidget(
-              columnHeaders: const ['Q. No.', 'Response', 'Date Sent'],
-              rows: _responsesRows,
+              columnHeaders: const ['Sr. No.', 'LAQ / LCQ No.', 'Date of Reply submitted', 'Remarks'],
+              rows: _repliesSubmittedRows,
               onRowsChanged: (rows) {
                 setState(() {
-                  _responsesRows = rows;
+                  _repliesSubmittedRows = rows;
                   _notifyDataChanged();
                 });
               },
-              addButtonLabel: 'Add Response',
+              addButtonLabel: 'Add Reply',
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Follow-up Table
+            // Promises given by Hon Minister/s
             const Text(
-              'Follow-up Questions',
+              'Promises given by Hon Minister/s',
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
             DynamicTableWidget(
-              columnHeaders: const ['Q. No.', 'Follow-up', 'Date'],
-              rows: _followUpRows,
+              columnHeaders: const ['Sr. No.', 'LAQ / LCQ No.', 'Date of Question', 'Remarks'],
+              rows: _promisesGivenRows,
               onRowsChanged: (rows) {
                 setState(() {
-                  _followUpRows = rows;
+                  _promisesGivenRows = rows;
                   _notifyDataChanged();
                 });
               },
-              addButtonLabel: 'Add Follow-up',
+              addButtonLabel: 'Add Promise',
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Status Table
+            // Promises Compliance
             const Text(
-              'Current Status',
+              'Promises Compliance',
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
             DynamicTableWidget(
-              columnHeaders: const ['Q. No.', 'Status', 'Remarks'],
-              rows: _statusRows,
+              columnHeaders: const ['Sr. No.', 'LAQ / LCQ No.', 'Date of Promise', 'Promise contents', 'Action taken'],
+              rows: _promisesComplianceRows,
               onRowsChanged: (rows) {
                 setState(() {
-                  _statusRows = rows;
+                  _promisesComplianceRows = rows;
                   _notifyDataChanged();
                 });
               },
-              addButtonLabel: 'Add Status',
+              addButtonLabel: 'Add Compliance',
             ),
           ],
+
+          const SizedBox(height: 24),
 
           // Common Fields
           SectionCommonFields(

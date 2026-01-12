@@ -26,7 +26,7 @@ class _BidSubmissionSectionState extends State<BidSubmissionSection> {
   late TextEditingController _biddersCountController;
 
   DateTime? _submissionDate;
-  bool _isComplete = false;
+  String _emdVerificationDone = 'no'; // yes or no
 
   @override
   void initState() {
@@ -51,7 +51,7 @@ class _BidSubmissionSectionState extends State<BidSubmissionSection> {
 
       final sectionData = widget.initialData['section_data'] ?? {};
       _biddersCountController.text = sectionData['bidders_count']?.toString() ?? '';
-      _isComplete = sectionData['is_complete'] ?? false;
+      _emdVerificationDone = sectionData['emd_verification_done'] ?? 'no';
       if (sectionData['submission_date'] != null) {
         _submissionDate = DateTime.parse(sectionData['submission_date']);
       }
@@ -66,7 +66,7 @@ class _BidSubmissionSectionState extends State<BidSubmissionSection> {
       'section_data': {
         'submission_date': _submissionDate?.toIso8601String(),
         'bidders_count': _biddersCountController.text,
-        'is_complete': _isComplete,
+        'emd_verification_done': _emdVerificationDone,
       },
     });
   }
@@ -87,8 +87,18 @@ class _BidSubmissionSectionState extends State<BidSubmissionSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Text(
+            'Bid Submission:',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 16),
+
           FormDatePicker(
-            label: 'Bid Submission Date',
+            label: 'Date',
             selectedDate: _submissionDate,
             onDateSelected: (date) {
               setState(() {
@@ -97,33 +107,73 @@ class _BidSubmissionSectionState extends State<BidSubmissionSection> {
               });
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
+
+          const Text(
+            '1. # of bidders tendered',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
 
           TextFormField(
             controller: _biddersCountController,
             onChanged: (_) => _notifyDataChanged(),
             decoration: const InputDecoration(
-              labelText: 'Number of Bidders Submitted',
-              hintText: 'e.g., 3',
+              hintText: 'Enter number',
               prefixIcon: Icon(Icons.people, size: 20),
               border: OutlineInputBorder(),
             ),
             keyboardType: TextInputType.number,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
 
-          CheckboxListTile(
-            title: const Text('Bid Submission Complete'),
-            value: _isComplete,
-            onChanged: (value) {
-              setState(() {
-                _isComplete = value ?? false;
-                _notifyDataChanged();
-              });
-            },
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
+          const Text(
+            '2. EMD verification done',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          Row(
+            children: [
+              Expanded(
+                child: RadioListTile<String>(
+                  title: const Text('Yes'),
+                  value: 'yes',
+                  groupValue: _emdVerificationDone,
+                  onChanged: (value) {
+                    setState(() {
+                      _emdVerificationDone = value!;
+                      _notifyDataChanged();
+                    });
+                  },
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              Expanded(
+                child: RadioListTile<String>(
+                  title: const Text('No'),
+                  value: 'no',
+                  groupValue: _emdVerificationDone,
+                  onChanged: (value) {
+                    setState(() {
+                      _emdVerificationDone = value!;
+                      _notifyDataChanged();
+                    });
+                  },
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
 
           // Common Fields

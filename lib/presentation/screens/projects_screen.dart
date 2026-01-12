@@ -7,6 +7,7 @@ import '../../data/models/category.dart';
 import '../providers/project_provider.dart';
 import '../widgets/dialogs/create_project_dialog.dart';
 import 'project_detail_screen.dart';
+import 'critical_activities_screen.dart';
 
 /// Projects Screen - Shows projects within a selected category
 ///
@@ -177,6 +178,20 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_active, size: 24),
+            tooltip: 'Critical Activities',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => CriticalActivitiesScreen(
+                    categoryId: widget.category.id,
+                  ),
+                ),
+              );
+            },
+            color: AppColors.textPrimary,
+          ),
           IconButton(
             icon: const Icon(Icons.add, size: 24),
             tooltip: 'Create Project',

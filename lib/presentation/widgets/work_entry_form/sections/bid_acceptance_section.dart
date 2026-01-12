@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
+import '../critical_bell_icon.dart';
 
 /// Bid Acceptance Section
-/// Status radio buttons (5 options)
+/// Status checkboxes with bell icons
 class BidAcceptanceSection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const BidAcceptanceSection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -24,14 +27,14 @@ class _BidAcceptanceSectionState extends State<BidAcceptanceSection> {
   late TextEditingController _pendingWithController;
   late TextEditingController _remarksController;
 
-  String _selectedStatus = 'pending';
+  String _selectedStatus = 'in_progress';
 
   final List<Map<String, String>> _statusOptions = [
-    {'value': 'pending', 'label': 'Pending'},
+    {'value': 'in_progress', 'label': 'In progress'},
+    {'value': 'submitted', 'label': 'Submitted'},
+    {'value': 'board_approval', 'label': 'Board Approval'},
     {'value': 'accepted', 'label': 'Accepted'},
     {'value': 'rejected', 'label': 'Rejected'},
-    {'value': 'on_hold', 'label': 'On Hold'},
-    {'value': 'cancelled', 'label': 'Cancelled'},
   ];
 
   @override
@@ -56,7 +59,7 @@ class _BidAcceptanceSectionState extends State<BidAcceptanceSection> {
       _pendingWithController.text = widget.initialData['pending_with'] ?? '';
 
       final sectionData = widget.initialData['section_data'] ?? {};
-      _selectedStatus = sectionData['status'] ?? 'pending';
+      _selectedStatus = sectionData['status'] ?? 'in_progress';
       _remarksController.text = sectionData['remarks'] ?? '';
     }
   }
@@ -100,18 +103,48 @@ class _BidAcceptanceSectionState extends State<BidAcceptanceSection> {
           const SizedBox(height: 12),
 
           ..._statusOptions.map((option) {
-            return RadioListTile<String>(
-              title: Text(option['label']!),
-              value: option['value']!,
-              groupValue: _selectedStatus,
-              onChanged: (value) {
-                setState(() {
-                  _selectedStatus = value!;
-                  _notifyDataChanged();
-                });
-              },
-              dense: true,
-              contentPadding: EdgeInsets.zero,
+            final isSelected = _selectedStatus == option['value'];
+            // Show bell on In progress, Submitted, and Board Approval
+            final showBellIcon = option['value'] == 'in_progress' ||
+                                 option['value'] == 'submitted' ||
+                                 option['value'] == 'board_approval';
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Checkbox(
+                    value: isSelected,
+                    onChanged: (checked) {
+                      if (checked == true) {
+                        setState(() {
+                          _selectedStatus = option['value']!;
+                          _notifyDataChanged();
+                        });
+                      }
+                    },
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedStatus = option['value']!;
+                          _notifyDataChanged();
+                        });
+                      },
+                      child: Text(
+                        option['label']!,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  ),
+                  if (showBellIcon)
+                    CriticalBellIcon(
+                      projectId: widget.projectId,
+                      sectionName: 'Bid Acceptance',
+                      optionName: option['label']!,
+                    ),
+                ],
+              ),
             );
           }),
 

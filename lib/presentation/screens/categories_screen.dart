@@ -8,6 +8,7 @@ import '../providers/category_provider.dart';
 import '../widgets/dialogs/create_category_dialog.dart';
 import 'projects_screen.dart';
 import 'login_screen.dart';
+import 'critical_activities_screen.dart';
 
 /// Categories Screen - Main screen showing project categories
 ///
@@ -114,6 +115,18 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_active, size: 24),
+            tooltip: 'Critical Activities',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const CriticalActivitiesScreen(),
+                ),
+              );
+            },
+            color: AppColors.textPrimary,
+          ),
           IconButton(
             icon: const Icon(Icons.create_new_folder, size: 24),
             tooltip: 'Create Category',

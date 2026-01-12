@@ -120,11 +120,13 @@ class _SectionDetailScreenState extends ConsumerState<SectionDetailScreen> {
         );
       case 'dpr':
         return DPRSection(
+          projectId: widget.project.id,
           initialData: _sectionData,
           onDataChanged: _onDataChanged,
         );
       case 'boq':
         return BOQSection(
+          projectId: widget.project.id,
           initialData: _sectionData,
           onDataChanged: _onDataChanged,
         );

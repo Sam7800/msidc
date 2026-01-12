@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../form_date_picker.dart';
+import '../critical_bell_icon.dart';
 
 /// Technical Evaluation Section
 /// Status checkboxes with conditional fields
 class TechnicalEvaluationSection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const TechnicalEvaluationSection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -26,13 +29,15 @@ class _TechnicalEvaluationSectionState extends State<TechnicalEvaluationSection>
   late TextEditingController _qualifiedBiddersController;
   late TextEditingController _remarksController;
 
-  String _selectedStatus = 'not_started';
+  String _selectedStatus = 'in_progress';
+  DateTime? _likelyCompletionDate;
   DateTime? _completionDate;
 
   final List<Map<String, String>> _statusOptions = [
-    {'value': 'not_started', 'label': 'Not Started'},
     {'value': 'in_progress', 'label': 'In Progress'},
     {'value': 'completed', 'label': 'Completed'},
+    {'value': 'results_published', 'label': 'Qualified bidders results published'},
+    {'value': 'date_informed', 'label': 'Date of financial bid opening informed'},
   ];
 
   @override
@@ -58,28 +63,33 @@ class _TechnicalEvaluationSectionState extends State<TechnicalEvaluationSection>
       _pendingWithController.text = widget.initialData['pending_with'] ?? '';
 
       final sectionData = widget.initialData['section_data'] ?? {};
-      _selectedStatus = sectionData['status'] ?? 'not_started';
+      _selectedStatus = sectionData['status'] ?? 'in_progress';
 
-      if (_selectedStatus == 'completed') {
-        _qualifiedBiddersController.text = sectionData['qualified_bidders']?.toString() ?? '';
-        _remarksController.text = sectionData['remarks'] ?? '';
-        if (sectionData['completion_date'] != null) {
-          _completionDate = DateTime.parse(sectionData['completion_date']);
-        }
+      if (sectionData['likely_completion_date'] != null) {
+        _likelyCompletionDate = DateTime.parse(sectionData['likely_completion_date']);
       }
+
+      if (sectionData['completion_date'] != null) {
+        _completionDate = DateTime.parse(sectionData['completion_date']);
+      }
+
+      _qualifiedBiddersController.text = sectionData['qualified_bidders']?.toString() ?? '';
+      _remarksController.text = sectionData['remarks'] ?? '';
     }
   }
 
   void _notifyDataChanged() {
     final sectionData = <String, dynamic>{
       'status': _selectedStatus,
+      if (_selectedStatus == 'in_progress' && _likelyCompletionDate != null)
+        'likely_completion_date': _likelyCompletionDate!.toIso8601String(),
+      if (_selectedStatus == 'completed' && _completionDate != null)
+        'completion_date': _completionDate!.toIso8601String(),
+      if (_qualifiedBiddersController.text.isNotEmpty)
+        'qualified_bidders': _qualifiedBiddersController.text,
+      if (_remarksController.text.isNotEmpty)
+        'remarks': _remarksController.text,
     };
-
-    if (_selectedStatus == 'completed') {
-      sectionData['completion_date'] = _completionDate?.toIso8601String();
-      sectionData['qualified_bidders'] = _qualifiedBiddersController.text;
-      sectionData['remarks'] = _remarksController.text;
-    }
 
     widget.onDataChanged({
       'person_responsible': _personResponsibleController.text,
@@ -119,22 +129,61 @@ class _TechnicalEvaluationSectionState extends State<TechnicalEvaluationSection>
 
           ..._statusOptions.map((option) {
             final isSelected = _selectedStatus == option['value'];
-            return CheckboxListTile(
-              title: Text(option['label']!),
-              value: isSelected,
-              onChanged: (checked) {
-                if (checked == true) {
-                  setState(() {
-                    _selectedStatus = option['value']!;
-                    _notifyDataChanged();
-                  });
-                }
-              },
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
+            final showBellIcon = option['value'] == 'in_progress'; // Only show bell on In Progress
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Checkbox(
+                    value: isSelected,
+                    onChanged: (checked) {
+                      if (checked == true) {
+                        setState(() {
+                          _selectedStatus = option['value']!;
+                          _notifyDataChanged();
+                        });
+                      }
+                    },
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedStatus = option['value']!;
+                          _notifyDataChanged();
+                        });
+                      },
+                      child: Text(
+                        option['label']!,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  ),
+                  if (showBellIcon)
+                    CriticalBellIcon(
+                      projectId: widget.projectId,
+                      sectionName: 'Technical Evaluation',
+                      optionName: option['label']!,
+                    ),
+                ],
+              ),
             );
           }),
+
+          // Conditional: Likely Completion Date (only if in_progress)
+          if (_selectedStatus == 'in_progress') ...[
+            const SizedBox(height: 24),
+            FormDatePicker(
+              label: 'Likely Completion Date',
+              selectedDate: _likelyCompletionDate,
+              onDateSelected: (date) {
+                setState(() {
+                  _likelyCompletionDate = date;
+                  _notifyDataChanged();
+                });
+              },
+            ),
+          ],
 
           // Conditional fields (if completed)
           if (_selectedStatus == 'completed') ...[

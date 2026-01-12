@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../form_date_picker.dart';
+import '../critical_bell_icon.dart';
 
 /// EOT Section - Extension of Time
 /// Radio: N/A or Applicable with checkboxes and conditional fields
 class EOTSection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const EOTSection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -23,14 +26,18 @@ class _EOTSectionState extends State<EOTSection> {
   late TextEditingController _personResponsibleController;
   late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
-  late TextEditingController _periodController;
-  late TextEditingController _reasonController;
+  late TextEditingController _periodUnderConsiderationController;
+  late TextEditingController _approvedPeriodController;
+  late TextEditingController _compensationClaimedController;
+  late TextEditingController _compensationAdmittedController;
 
   String _applicability = 'na'; // na or applicable
-  bool _isRequested = false;
-  bool _isApproved = false;
-  DateTime? _requestDate;
-  DateTime? _approvalDate;
+  String _proposalStatus = 'not_started'; // not_started, under_consideration, submitted
+  DateTime? _submittedDate;
+  String _escalationStatus = 'with_escalation'; // with_escalation, without_escalation
+  bool _byFreezingIndices = false;
+  String _ldStatus = 'without_ld'; // without_ld, with_ld
+  String _compensationPayable = 'no'; // yes or no
 
   @override
   void initState() {
@@ -43,8 +50,10 @@ class _EOTSectionState extends State<EOTSection> {
     _personResponsibleController = TextEditingController();
     _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
-    _periodController = TextEditingController();
-    _reasonController = TextEditingController();
+    _periodUnderConsiderationController = TextEditingController();
+    _approvedPeriodController = TextEditingController();
+    _compensationClaimedController = TextEditingController();
+    _compensationAdmittedController = TextEditingController();
   }
 
   void _loadInitialData() {
@@ -58,16 +67,18 @@ class _EOTSectionState extends State<EOTSection> {
       _applicability = sectionData['applicability'] ?? 'na';
 
       if (_applicability == 'applicable') {
-        _isRequested = sectionData['is_requested'] ?? false;
-        _isApproved = sectionData['is_approved'] ?? false;
-        _periodController.text = sectionData['period_months']?.toString() ?? '';
-        _reasonController.text = sectionData['reason'] ?? '';
-        if (sectionData['request_date'] != null) {
-          _requestDate = DateTime.parse(sectionData['request_date']);
+        _proposalStatus = sectionData['proposal_status'] ?? 'not_started';
+        _periodUnderConsiderationController.text = sectionData['period_under_consideration'] ?? '';
+        if (sectionData['submitted_date'] != null) {
+          _submittedDate = DateTime.parse(sectionData['submitted_date']);
         }
-        if (sectionData['approval_date'] != null) {
-          _approvalDate = DateTime.parse(sectionData['approval_date']);
-        }
+        _approvedPeriodController.text = sectionData['approved_period'] ?? '';
+        _escalationStatus = sectionData['escalation_status'] ?? 'with_escalation';
+        _byFreezingIndices = sectionData['by_freezing_indices'] ?? false;
+        _ldStatus = sectionData['ld_status'] ?? 'without_ld';
+        _compensationPayable = sectionData['compensation_payable'] ?? 'no';
+        _compensationClaimedController.text = sectionData['compensation_claimed'] ?? '';
+        _compensationAdmittedController.text = sectionData['compensation_admitted'] ?? '';
       }
     }
   }
@@ -78,12 +89,16 @@ class _EOTSectionState extends State<EOTSection> {
     };
 
     if (_applicability == 'applicable') {
-      sectionData['is_requested'] = _isRequested;
-      sectionData['is_approved'] = _isApproved;
-      sectionData['period_months'] = _periodController.text;
-      sectionData['reason'] = _reasonController.text;
-      sectionData['request_date'] = _requestDate?.toIso8601String();
-      sectionData['approval_date'] = _approvalDate?.toIso8601String();
+      sectionData['proposal_status'] = _proposalStatus;
+      sectionData['period_under_consideration'] = _periodUnderConsiderationController.text;
+      sectionData['submitted_date'] = _submittedDate?.toIso8601String();
+      sectionData['approved_period'] = _approvedPeriodController.text;
+      sectionData['escalation_status'] = _escalationStatus;
+      sectionData['by_freezing_indices'] = _byFreezingIndices;
+      sectionData['ld_status'] = _ldStatus;
+      sectionData['compensation_payable'] = _compensationPayable;
+      sectionData['compensation_claimed'] = _compensationClaimedController.text;
+      sectionData['compensation_admitted'] = _compensationAdmittedController.text;
     }
 
     widget.onDataChanged({
@@ -99,8 +114,10 @@ class _EOTSectionState extends State<EOTSection> {
     _personResponsibleController.dispose();
     _postHeldController.dispose();
     _pendingWithController.dispose();
-    _periodController.dispose();
-    _reasonController.dispose();
+    _periodUnderConsiderationController.dispose();
+    _approvedPeriodController.dispose();
+    _compensationClaimedController.dispose();
+    _compensationAdmittedController.dispose();
     super.dispose();
   }
 
@@ -112,19 +129,21 @@ class _EOTSectionState extends State<EOTSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Applicability',
+            'EOT (Extension of Time):',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+
+          // Not Applicable / Applicable
           Row(
             children: [
               Expanded(
                 child: RadioListTile<String>(
-                  title: const Text('N/A'),
+                  title: const Text('Not Applicable'),
                   value: 'na',
                   groupValue: _applicability,
                   onChanged: (value) {
@@ -154,92 +173,282 @@ class _EOTSectionState extends State<EOTSection> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
 
-          // Conditional Fields (if applicable)
+          // If Applicable
           if (_applicability == 'applicable') ...[
-            // Status Checkboxes
-            CheckboxListTile(
-              title: const Text('Requested'),
-              value: _isRequested,
-              onChanged: (value) {
-                setState(() {
-                  _isRequested = value ?? false;
-                  _notifyDataChanged();
-                });
-              },
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
-
-            CheckboxListTile(
-              title: const Text('Approved'),
-              value: _isApproved,
-              onChanged: (value) {
-                setState(() {
-                  _isApproved = value ?? false;
-                  _notifyDataChanged();
-                });
-              },
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
             const SizedBox(height: 16),
 
+            // Proposal Not started
+            RadioListTile<String>(
+              title: const Text('Proposal Not started'),
+              value: 'not_started',
+              groupValue: _proposalStatus,
+              onChanged: (value) {
+                setState(() {
+                  _proposalStatus = value!;
+                  _notifyDataChanged();
+                });
+              },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+
+            // Proposal under Consideration – Period (Months)
+            RadioListTile<String>(
+              title: const Text('Proposal under Consideration – Period (Months)'),
+              value: 'under_consideration',
+              groupValue: _proposalStatus,
+              onChanged: (value) {
+                setState(() {
+                  _proposalStatus = value!;
+                  _notifyDataChanged();
+                });
+              },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+            if (_proposalStatus == 'under_consideration') ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.only(left: 24),
+                child: TextFormField(
+                  controller: _periodUnderConsiderationController,
+                  onChanged: (_) => _notifyDataChanged(),
+                  decoration: const InputDecoration(
+                    hintText: 'Enter period in months',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+            const SizedBox(height: 8),
+
+            // Proposal Submitted: Date (with bell icon)
+            Row(
+              children: [
+                Radio<String>(
+                  value: 'submitted',
+                  groupValue: _proposalStatus,
+                  onChanged: (value) {
+                    setState(() {
+                      _proposalStatus = value!;
+                      _notifyDataChanged();
+                    });
+                  },
+                ),
+                const Text(
+                  'Proposal Submitted: Date',
+                  style: TextStyle(fontSize: 14),
+                ),
+                const SizedBox(width: 8),
+                CriticalBellIcon(
+                  projectId: widget.projectId,
+                  sectionName: 'EOT',
+                  optionName: 'Proposal Submitted',
+                ),
+              ],
+            ),
+            if (_proposalStatus == 'submitted') ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.only(left: 24),
+                child: FormDatePicker(
+                  label: '',
+                  selectedDate: _submittedDate,
+                  onDateSelected: (date) {
+                    setState(() {
+                      _submittedDate = date;
+                      _notifyDataChanged();
+                    });
+                  },
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+
+            // EOT Approved – Period (Months)
+            const Text(
+              'EOT Approved – Period (Months)',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
-              controller: _periodController,
+              controller: _approvedPeriodController,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
-                labelText: 'Extension Period (in months)',
-                hintText: 'e.g., 3',
-                prefixIcon: Icon(Icons.calendar_month, size: 20),
+                hintText: 'Enter approved period in months',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
 
-            FormDatePicker(
-              label: 'Request Date',
-              selectedDate: _requestDate,
-              onDateSelected: (date) {
+            // With Escalation / Without Escalation
+            const Text(
+              'Escalation:',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            RadioListTile<String>(
+              title: const Text('With Escalation'),
+              value: 'with_escalation',
+              groupValue: _escalationStatus,
+              onChanged: (value) {
                 setState(() {
-                  _requestDate = date;
+                  _escalationStatus = value!;
                   _notifyDataChanged();
                 });
               },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
             ),
+            RadioListTile<String>(
+              title: const Text('Without Escalation'),
+              value: 'without_escalation',
+              groupValue: _escalationStatus,
+              onChanged: (value) {
+                setState(() {
+                  _escalationStatus = value!;
+                  _notifyDataChanged();
+                });
+              },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+
+            // By freezing Indices
+            CheckboxListTile(
+              title: const Text('By freezing Indices'),
+              value: _byFreezingIndices,
+              onChanged: (value) {
+                setState(() {
+                  _byFreezingIndices = value ?? false;
+                  _notifyDataChanged();
+                });
+              },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+            ),
+
+            const SizedBox(height: 8),
+
+            // Without LD / With LD
+            RadioListTile<String>(
+              title: const Text('Without LD'),
+              value: 'without_ld',
+              groupValue: _ldStatus,
+              onChanged: (value) {
+                setState(() {
+                  _ldStatus = value!;
+                  _notifyDataChanged();
+                });
+              },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+            RadioListTile<String>(
+              title: const Text('With LD'),
+              value: 'with_ld',
+              groupValue: _ldStatus,
+              onChanged: (value) {
+                setState(() {
+                  _ldStatus = value!;
+                  _notifyDataChanged();
+                });
+              },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+
             const SizedBox(height: 16),
 
-            if (_isApproved) ...[
-              FormDatePicker(
-                label: 'Approval Date',
-                selectedDate: _approvalDate,
-                onDateSelected: (date) {
-                  setState(() {
-                    _approvalDate = date;
-                    _notifyDataChanged();
-                  });
-                },
+            // Compensation payable
+            const Text(
+              'Compensation payable',
+              style: TextStyle(fontSize: 14),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: RadioListTile<String>(
+                    title: const Text('Yes'),
+                    value: 'yes',
+                    groupValue: _compensationPayable,
+                    onChanged: (value) {
+                      setState(() {
+                        _compensationPayable = value!;
+                        _notifyDataChanged();
+                      });
+                    },
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                Expanded(
+                  child: RadioListTile<String>(
+                    title: const Text('No'),
+                    value: 'no',
+                    groupValue: _compensationPayable,
+                    onChanged: (value) {
+                      setState(() {
+                        _compensationPayable = value!;
+                        _notifyDataChanged();
+                      });
+                    },
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+
+            // Show compensation fields when Yes
+            if (_compensationPayable == 'yes') ...[
+              const SizedBox(height: 16),
+
+              // Amount of compensation Claimed
+              const Text(
+                'Amount of compensation Claimed',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _compensationClaimedController,
+                onChanged: (_) => _notifyDataChanged(),
+                decoration: const InputDecoration(
+                  hintText: 'Enter amount',
+                  prefixIcon: Icon(Icons.currency_rupee, size: 20),
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
               ),
               const SizedBox(height: 16),
-            ],
 
-            TextFormField(
-              controller: _reasonController,
-              onChanged: (_) => _notifyDataChanged(),
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Reason for EOT',
-                hintText: 'Enter reason',
-                prefixIcon: Icon(Icons.notes, size: 20),
-                border: OutlineInputBorder(),
-                alignLabelWithHint: true,
+              // Compensation admitted - Amount
+              const Text(
+                'Compensation admitted - Amount',
+                style: TextStyle(fontSize: 14),
               ),
-            ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _compensationAdmittedController,
+                onChanged: (_) => _notifyDataChanged(),
+                decoration: const InputDecoration(
+                  hintText: 'Enter amount',
+                  prefixIcon: Icon(Icons.currency_rupee, size: 20),
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+              ),
+            ],
           ],
+
+          const SizedBox(height: 24),
 
           // Common Fields
           SectionCommonFields(

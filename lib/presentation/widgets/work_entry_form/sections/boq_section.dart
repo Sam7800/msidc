@@ -3,15 +3,18 @@ import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../form_date_picker.dart';
 import '../dynamic_table_widget.dart';
+import '../critical_bell_icon.dart';
 
 /// BOQ Section - Bill of Quantities
 /// Checkboxes with dynamic table
 class BOQSection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const BOQSection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });

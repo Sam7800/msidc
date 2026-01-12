@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../form_date_picker.dart';
+import '../critical_bell_icon.dart';
 
 /// PBG Section - Performance Bank Guarantee
-/// Radio: Not Submitted/Submitted with conditional fields
+/// Radio: Not Submitted/Submitted with bell icon
 class PBGSection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const PBGSection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -23,13 +26,11 @@ class _PBGSectionState extends State<PBGSection> {
   late TextEditingController _personResponsibleController;
   late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
-  late TextEditingController _pbgNoController;
   late TextEditingController _amountController;
-  late TextEditingController _bankNameController;
+  late TextEditingController _periodController;
 
   String _submissionStatus = 'not_submitted'; // not_submitted or submitted
   DateTime? _dateOfSubmission;
-  DateTime? _validityDate;
 
   @override
   void initState() {
@@ -42,9 +43,8 @@ class _PBGSectionState extends State<PBGSection> {
     _personResponsibleController = TextEditingController();
     _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
-    _pbgNoController = TextEditingController();
     _amountController = TextEditingController();
-    _bankNameController = TextEditingController();
+    _periodController = TextEditingController();
   }
 
   void _loadInitialData() {
@@ -58,14 +58,10 @@ class _PBGSectionState extends State<PBGSection> {
       _submissionStatus = sectionData['submission_status'] ?? 'not_submitted';
 
       if (_submissionStatus == 'submitted') {
-        _pbgNoController.text = sectionData['pbg_no'] ?? '';
         _amountController.text = sectionData['amount'] ?? '';
-        _bankNameController.text = sectionData['bank_name'] ?? '';
+        _periodController.text = sectionData['period'] ?? '';
         if (sectionData['date_of_submission'] != null) {
           _dateOfSubmission = DateTime.parse(sectionData['date_of_submission']);
-        }
-        if (sectionData['validity_date'] != null) {
-          _validityDate = DateTime.parse(sectionData['validity_date']);
         }
       }
     }
@@ -77,11 +73,9 @@ class _PBGSectionState extends State<PBGSection> {
     };
 
     if (_submissionStatus == 'submitted') {
-      sectionData['pbg_no'] = _pbgNoController.text;
       sectionData['date_of_submission'] = _dateOfSubmission?.toIso8601String();
       sectionData['amount'] = _amountController.text;
-      sectionData['bank_name'] = _bankNameController.text;
-      sectionData['validity_date'] = _validityDate?.toIso8601String();
+      sectionData['period'] = _periodController.text;
     }
 
     widget.onDataChanged({
@@ -97,9 +91,8 @@ class _PBGSectionState extends State<PBGSection> {
     _personResponsibleController.dispose();
     _postHeldController.dispose();
     _pendingWithController.dispose();
-    _pbgNoController.dispose();
     _amountController.dispose();
-    _bankNameController.dispose();
+    _periodController.dispose();
     super.dispose();
   }
 
@@ -111,66 +104,73 @@ class _PBGSectionState extends State<PBGSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'PBG Status',
+            'PBG:',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+
+          // a) Not submitted
           Row(
             children: [
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('Not Submitted'),
-                  value: 'not_submitted',
-                  groupValue: _submissionStatus,
-                  onChanged: (value) {
-                    setState(() {
-                      _submissionStatus = value!;
-                      _notifyDataChanged();
-                    });
-                  },
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
+              Radio<String>(
+                value: 'not_submitted',
+                groupValue: _submissionStatus,
+                onChanged: (value) {
+                  setState(() {
+                    _submissionStatus = value!;
+                    _notifyDataChanged();
+                  });
+                },
               ),
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('Submitted'),
-                  value: 'submitted',
-                  groupValue: _submissionStatus,
-                  onChanged: (value) {
-                    setState(() {
-                      _submissionStatus = value!;
-                      _notifyDataChanged();
-                    });
-                  },
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
+              const Text(
+                'a) Not submitted',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(width: 8),
+              CriticalBellIcon(
+                projectId: widget.projectId,
+                sectionName: 'PBG',
+                optionName: 'Not submitted',
               ),
             ],
           ),
-          const SizedBox(height: 24),
 
-          // Conditional Fields (if submitted)
+          // b) Submitted
+          RadioListTile<String>(
+            title: const Text('b) Submitted -'),
+            value: 'submitted',
+            groupValue: _submissionStatus,
+            onChanged: (value) {
+              setState(() {
+                _submissionStatus = value!;
+                _notifyDataChanged();
+              });
+            },
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+
+          // Show fields when submitted is selected
           if (_submissionStatus == 'submitted') ...[
-            TextFormField(
-              controller: _pbgNoController,
-              onChanged: (_) => _notifyDataChanged(),
-              decoration: const InputDecoration(
-                labelText: 'PBG Number',
-                hintText: 'e.g., "PBG/2026/001"',
-                prefixIcon: Icon(Icons.confirmation_number, size: 20),
-                border: OutlineInputBorder(),
-              ),
-            ),
             const SizedBox(height: 16),
 
+            // i) Date
+            Row(
+              children: [
+                const SizedBox(width: 24),
+                const Text(
+                  'i) Date',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             FormDatePicker(
-              label: 'Date of Submission',
+              label: '',
               selectedDate: _dateOfSubmission,
               onDateSelected: (date) {
                 setState(() {
@@ -181,12 +181,22 @@ class _PBGSectionState extends State<PBGSection> {
             ),
             const SizedBox(height: 16),
 
+            // ii) Amount
+            Row(
+              children: [
+                const SizedBox(width: 24),
+                const Text(
+                  'ii) Amount',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             TextFormField(
               controller: _amountController,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
-                labelText: 'Amount (in Lakhs)',
-                hintText: 'e.g., 45',
+                hintText: 'Enter amount',
                 prefixIcon: Icon(Icons.currency_rupee, size: 20),
                 border: OutlineInputBorder(),
               ),
@@ -194,29 +204,29 @@ class _PBGSectionState extends State<PBGSection> {
             ),
             const SizedBox(height: 16),
 
+            // iii) Period
+            Row(
+              children: [
+                const SizedBox(width: 24),
+                const Text(
+                  'iii) Period',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             TextFormField(
-              controller: _bankNameController,
+              controller: _periodController,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
-                labelText: 'Bank Name',
-                hintText: 'Enter bank name',
-                prefixIcon: Icon(Icons.account_balance, size: 20),
+                hintText: 'Enter period',
+                prefixIcon: Icon(Icons.calendar_today, size: 20),
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 16),
-
-            FormDatePicker(
-              label: 'Validity Date',
-              selectedDate: _validityDate,
-              onDateSelected: (date) {
-                setState(() {
-                  _validityDate = date;
-                  _notifyDataChanged();
-                });
-              },
-            ),
           ],
+
+          const SizedBox(height: 24),
 
           // Common Fields
           SectionCommonFields(

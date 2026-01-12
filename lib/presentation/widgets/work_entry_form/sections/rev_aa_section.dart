@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../form_date_picker.dart';
+import '../critical_bell_icon.dart';
 
 /// Rev AA Section - Revised Administrative Approval
 /// Radio: Not Required/Necessary with conditional fields
 class RevAASection extends StatefulWidget {
+  final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const RevAASection({
     super.key,
+    required this.projectId,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -23,12 +26,14 @@ class _RevAASectionState extends State<RevAASection> {
   late TextEditingController _personResponsibleController;
   late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
-  late TextEditingController _revisedAmountController;
-  late TextEditingController _revisionNoController;
-  late TextEditingController _reasonController;
+  late TextEditingController _reasonsController;
+  late TextEditingController _amountProposedController;
+  late TextEditingController _revisedAANoController;
+  late TextEditingController _raaTableController;
 
   String _requirement = 'not_required'; // not_required or necessary
-  DateTime? _dateOfRevision;
+  String _status = 'in_progress'; // in_progress, submitted, approved, board_approval, revised_aa_accorded
+  DateTime? _dateSelected;
 
   @override
   void initState() {
@@ -41,9 +46,10 @@ class _RevAASectionState extends State<RevAASection> {
     _personResponsibleController = TextEditingController();
     _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
-    _revisedAmountController = TextEditingController();
-    _revisionNoController = TextEditingController();
-    _reasonController = TextEditingController();
+    _reasonsController = TextEditingController();
+    _amountProposedController = TextEditingController();
+    _revisedAANoController = TextEditingController();
+    _raaTableController = TextEditingController();
   }
 
   void _loadInitialData() {
@@ -57,11 +63,13 @@ class _RevAASectionState extends State<RevAASection> {
       _requirement = sectionData['requirement'] ?? 'not_required';
 
       if (_requirement == 'necessary') {
-        _revisedAmountController.text = sectionData['revised_amount'] ?? '';
-        _revisionNoController.text = sectionData['revision_no'] ?? '';
-        _reasonController.text = sectionData['reason'] ?? '';
-        if (sectionData['date_of_revision'] != null) {
-          _dateOfRevision = DateTime.parse(sectionData['date_of_revision']);
+        _reasonsController.text = sectionData['reasons'] ?? '';
+        _amountProposedController.text = sectionData['amount_proposed'] ?? '';
+        _status = sectionData['status'] ?? 'in_progress';
+        _revisedAANoController.text = sectionData['revised_aa_no'] ?? '';
+        _raaTableController.text = sectionData['raa_table'] ?? '';
+        if (sectionData['date'] != null) {
+          _dateSelected = DateTime.parse(sectionData['date']);
         }
       }
     }
@@ -73,10 +81,12 @@ class _RevAASectionState extends State<RevAASection> {
     };
 
     if (_requirement == 'necessary') {
-      sectionData['revised_amount'] = _revisedAmountController.text;
-      sectionData['revision_no'] = _revisionNoController.text;
-      sectionData['date_of_revision'] = _dateOfRevision?.toIso8601String();
-      sectionData['reason'] = _reasonController.text;
+      sectionData['reasons'] = _reasonsController.text;
+      sectionData['amount_proposed'] = _amountProposedController.text;
+      sectionData['status'] = _status;
+      sectionData['revised_aa_no'] = _revisedAANoController.text;
+      sectionData['date'] = _dateSelected?.toIso8601String();
+      sectionData['raa_table'] = _raaTableController.text;
     }
 
     widget.onDataChanged({
@@ -92,9 +102,10 @@ class _RevAASectionState extends State<RevAASection> {
     _personResponsibleController.dispose();
     _postHeldController.dispose();
     _pendingWithController.dispose();
-    _revisedAmountController.dispose();
-    _revisionNoController.dispose();
-    _reasonController.dispose();
+    _reasonsController.dispose();
+    _amountProposedController.dispose();
+    _revisedAANoController.dispose();
+    _raaTableController.dispose();
     super.dispose();
   }
 
@@ -106,14 +117,16 @@ class _RevAASectionState extends State<RevAASection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Requirement',
+            'Rev AA:',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+
+          // Not Required / Necessary
           Row(
             children: [
               Expanded(
@@ -148,59 +161,193 @@ class _RevAASectionState extends State<RevAASection> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
 
-          // Conditional Fields (if necessary)
+          // If Necessary
           if (_requirement == 'necessary') ...[
+            const SizedBox(height: 16),
+
+            // Reasons
+            const Text(
+              'Reasons',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
-              controller: _revisionNoController,
+              controller: _reasonsController,
               onChanged: (_) => _notifyDataChanged(),
+              maxLines: 3,
               decoration: const InputDecoration(
-                labelText: 'Revision Number',
-                hintText: 'e.g., "Rev AA/2026/001"',
-                prefixIcon: Icon(Icons.confirmation_number, size: 20),
+                hintText: 'Enter reasons',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
 
+            // Amount Proposed Rs. Crore / Lakhs
+            const Text(
+              'Amount Proposed Rs. Crore / Lakhs',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _amountProposedController,
+              onChanged: (_) => _notifyDataChanged(),
+              decoration: const InputDecoration(
+                hintText: 'Enter amount',
+                prefixIcon: Icon(Icons.currency_rupee, size: 20),
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+            ),
+            const SizedBox(height: 16),
+
+            // Status
+            const Text(
+              'Status:',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // In progress
+            RadioListTile<String>(
+              title: const Text('In progress'),
+              value: 'in_progress',
+              groupValue: _status,
+              onChanged: (value) {
+                setState(() {
+                  _status = value!;
+                  _notifyDataChanged();
+                });
+              },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+
+            // Submitted (with bell icon)
+            Row(
+              children: [
+                Radio<String>(
+                  value: 'submitted',
+                  groupValue: _status,
+                  onChanged: (value) {
+                    setState(() {
+                      _status = value!;
+                      _notifyDataChanged();
+                    });
+                  },
+                ),
+                const Expanded(
+                  child: Text(
+                    'Submitted',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+                CriticalBellIcon(
+                  projectId: widget.projectId,
+                  sectionName: 'Rev AA',
+                  optionName: 'Submitted',
+                ),
+              ],
+            ),
+
+            // Approved
+            RadioListTile<String>(
+              title: const Text('Approved'),
+              value: 'approved',
+              groupValue: _status,
+              onChanged: (value) {
+                setState(() {
+                  _status = value!;
+                  _notifyDataChanged();
+                });
+              },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+
+            // Board Approval
+            RadioListTile<String>(
+              title: const Text('Board Approval'),
+              value: 'board_approval',
+              groupValue: _status,
+              onChanged: (value) {
+                setState(() {
+                  _status = value!;
+                  _notifyDataChanged();
+                });
+              },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+
+            // Revised AA Accorded
+            RadioListTile<String>(
+              title: const Text('Revised AA Accorded'),
+              value: 'revised_aa_accorded',
+              groupValue: _status,
+              onChanged: (value) {
+                setState(() {
+                  _status = value!;
+                  _notifyDataChanged();
+                });
+              },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+
+            const SizedBox(height: 16),
+
+            // Revised AA No.
+            const Text(
+              'Revised AA No.',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _revisedAANoController,
+              onChanged: (_) => _notifyDataChanged(),
+              decoration: const InputDecoration(
+                hintText: 'Enter revised AA number',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Date
             FormDatePicker(
-              label: 'Date of Revision',
-              selectedDate: _dateOfRevision,
+              label: 'Date',
+              selectedDate: _dateSelected,
               onDateSelected: (date) {
                 setState(() {
-                  _dateOfRevision = date;
+                  _dateSelected = date;
                   _notifyDataChanged();
                 });
               },
             ),
             const SizedBox(height: 16),
 
-            TextFormField(
-              controller: _revisedAmountController,
-              onChanged: (_) => _notifyDataChanged(),
-              decoration: const InputDecoration(
-                labelText: 'Revised Amount (in Crores/Lakhs)',
-                hintText: 'e.g., "120 Cr"',
-                prefixIcon: Icon(Icons.currency_rupee, size: 20),
-                border: OutlineInputBorder(),
-              ),
+            // RAA Table of Recap Sheet
+            const Text(
+              'RAA Table of Recap Sheet',
+              style: TextStyle(fontSize: 14),
             ),
-            const SizedBox(height: 16),
-
+            const SizedBox(height: 8),
             TextFormField(
-              controller: _reasonController,
+              controller: _raaTableController,
               onChanged: (_) => _notifyDataChanged(),
-              maxLines: 4,
+              maxLines: 3,
               decoration: const InputDecoration(
-                labelText: 'Reason for Revision',
-                hintText: 'Enter reason',
-                prefixIcon: Icon(Icons.notes, size: 20),
+                hintText: 'Enter details',
                 border: OutlineInputBorder(),
-                alignLabelWithHint: true,
               ),
             ),
           ],
+
+          const SizedBox(height: 24),
 
           // Common Fields
           SectionCommonFields(

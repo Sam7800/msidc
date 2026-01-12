@@ -136,43 +136,43 @@ class _WorkEntryTabState extends ConsumerState<WorkEntryTab> {
       case 'aa':
         return AASection(initialData: _sectionData['aa'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('aa', data));
       case 'dpr':
-        return DPRSection(initialData: _sectionData['dpr'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('dpr', data));
+        return DPRSection(projectId: widget.project.id, initialData: _sectionData['dpr'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('dpr', data));
       case 'boq':
-        return BOQSection(initialData: _sectionData['boq'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('boq', data));
+        return BOQSection(projectId: widget.project.id, initialData: _sectionData['boq'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('boq', data));
       case 'schedules':
-        return SchedulesSection(initialData: _sectionData['schedules'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('schedules', data));
+        return SchedulesSection(projectId: widget.project.id, initialData: _sectionData['schedules'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('schedules', data));
       case 'drawings':
-        return DrawingsSection(initialData: _sectionData['drawings'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('drawings', data));
+        return DrawingsSection(projectId: widget.project.id, initialData: _sectionData['drawings'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('drawings', data));
       case 'bid_documents':
-        return BidDocumentsSection(initialData: _sectionData['bid_documents'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('bid_documents', data));
+        return BidDocumentsSection(projectId: widget.project.id, initialData: _sectionData['bid_documents'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('bid_documents', data));
       case 'env':
-        return ENVSection(initialData: _sectionData['env'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('env', data));
+        return ENVSection(projectId: widget.project.id, initialData: _sectionData['env'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('env', data));
       case 'la':
-        return LASection(initialData: _sectionData['la'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('la', data));
+        return LASection(projectId: widget.project.id, initialData: _sectionData['la'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('la', data));
       case 'utility_shifting':
-        return UtilityShiftingSection(initialData: _sectionData['utility_shifting'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('utility_shifting', data));
+        return UtilityShiftingSection(projectId: widget.project.id, initialData: _sectionData['utility_shifting'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('utility_shifting', data));
       case 'ts':
-        return TSSection(initialData: _sectionData['ts'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ts', data));
+        return TSSection(projectId: widget.project.id, initialData: _sectionData['ts'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ts', data));
       case 'nit':
-        return NITSection(initialData: _sectionData['nit'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('nit', data));
+        return NITSection(projectId: widget.project.id, initialData: _sectionData['nit'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('nit', data));
       case 'pre_bid':
         return PreBidSection(initialData: _sectionData['pre_bid'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('pre_bid', data));
       case 'csd':
-        return CSDSection(initialData: _sectionData['csd'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('csd', data));
+        return CSDSection(projectId: widget.project.id, initialData: _sectionData['csd'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('csd', data));
       case 'bid_submission':
         return BidSubmissionSection(initialData: _sectionData['bid_submission'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('bid_submission', data));
       case 'technical_evaluation':
-        return TechnicalEvaluationSection(initialData: _sectionData['technical_evaluation'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('technical_evaluation', data));
+        return TechnicalEvaluationSection(projectId: widget.project.id, initialData: _sectionData['technical_evaluation'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('technical_evaluation', data));
       case 'financial_bid':
         return FinancialBidSection(initialData: _sectionData['financial_bid'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('financial_bid', data));
       case 'bid_acceptance':
-        return BidAcceptanceSection(initialData: _sectionData['bid_acceptance'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('bid_acceptance', data));
+        return BidAcceptanceSection(projectId: widget.project.id, initialData: _sectionData['bid_acceptance'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('bid_acceptance', data));
       case 'loa':
-        return LOASection(initialData: _sectionData['loa'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('loa', data));
+        return LOASection(projectId: widget.project.id, initialData: _sectionData['loa'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('loa', data));
       case 'pbg':
-        return PBGSection(initialData: _sectionData['pbg'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('pbg', data));
+        return PBGSection(projectId: widget.project.id, initialData: _sectionData['pbg'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('pbg', data));
       case 'work_order':
-        return WorkOrderSection(initialData: _sectionData['work_order'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('work_order', data));
+        return WorkOrderSection(projectId: widget.project.id, initialData: _sectionData['work_order'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('work_order', data));
       case 'agreement_amount':
         return AgreementAmountSection(initialData: _sectionData['agreement_amount'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('agreement_amount', data));
       case 'appointed_date':
@@ -192,19 +192,19 @@ class _WorkEntryTabState extends ConsumerState<WorkEntryTab> {
       case 'ld':
         return LDSection(initialData: _sectionData['ld'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ld', data));
       case 'eot':
-        return EOTSection(initialData: _sectionData['eot'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('eot', data));
+        return EOTSection(projectId: widget.project.id, initialData: _sectionData['eot'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('eot', data));
       case 'cos':
-        return COSSection(initialData: _sectionData['cos'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('cos', data));
+        return COSSection(projectId: widget.project.id, initialData: _sectionData['cos'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('cos', data));
       case 'expenditure':
         return ExpenditureSection(initialData: _sectionData['expenditure'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('expenditure', data));
       case 'audit_para':
-        return AuditParaSection(initialData: _sectionData['audit_para'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('audit_para', data));
+        return AuditParaSection(projectId: widget.project.id, initialData: _sectionData['audit_para'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('audit_para', data));
       case 'laq':
-        return LAQSection(initialData: _sectionData['laq'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('laq', data));
+        return LAQSection(projectId: widget.project.id, initialData: _sectionData['laq'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('laq', data));
       case 'technical_audit':
         return TechnicalAuditSection(initialData: _sectionData['technical_audit'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('technical_audit', data));
       case 'rev_aa':
-        return RevAASection(initialData: _sectionData['rev_aa'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('rev_aa', data));
+        return RevAASection(projectId: widget.project.id, initialData: _sectionData['rev_aa'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('rev_aa', data));
       case 'supplementary_agreement':
         return SupplementaryAgreementSection(initialData: _sectionData['supplementary_agreement'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('supplementary_agreement', data));
       default:

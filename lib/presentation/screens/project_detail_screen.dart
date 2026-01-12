@@ -3,6 +3,7 @@ import '../../data/models/project.dart';
 import '../../theme/app_colors.dart';
 import '../widgets/work_entry_form/work_entry_tab.dart';
 import '../widgets/module_tabs/review_tab_placeholder.dart';
+import 'critical_activities_screen.dart';
 
 /// Project Detail Screen - Shows 2 module tabs for selected project
 ///
@@ -118,6 +119,23 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_active, size: 24),
+            tooltip: 'Critical Activities',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => CriticalActivitiesScreen(
+                    projectId: widget.project.id,
+                  ),
+                ),
+              );
+            },
+            color: AppColors.textPrimary,
+          ),
+          const SizedBox(width: 8),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
