@@ -1,0 +1,42 @@
+name: msidcv1
+description: "MSIDC Project Management System - Clean architecture version"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+
+  # Database
+  sqflite: ^2.3.3+2
+  sqflite_common_ffi: ^2.3.3  # For desktop support
+  sqlite3_flutter_libs: ^0.5.24  # Native SQLite3 libraries
+  path: ^1.9.0
+  path_provider: ^2.1.4
+
+  # Date & Number Formatting
+  intl: ^0.19.0
+
+  # Desktop Features
+  window_manager: ^0.4.2
+
+  # File Operations (for photo uploads in work entry form)
+  file_picker: ^8.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
