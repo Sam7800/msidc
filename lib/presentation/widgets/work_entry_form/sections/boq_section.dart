@@ -22,9 +22,8 @@ class BOQSection extends StatefulWidget {
 
 class _BOQSectionState extends State<BOQSection> {
   late TextEditingController _personResponsibleController;
+  late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
-  late TextEditingController _heldWithController;
-  late TextEditingController _tabImprintController;
 
   String _selectedStatus = 'not_started';
   DateTime? _likelyCompletionDate;
@@ -45,18 +44,16 @@ class _BOQSectionState extends State<BOQSection> {
 
   void _initControllers() {
     _personResponsibleController = TextEditingController();
+    _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
-    _heldWithController = TextEditingController();
-    _tabImprintController = TextEditingController();
   }
 
   void _loadInitialData() {
     if (widget.initialData.isNotEmpty) {
       _personResponsibleController.text =
           widget.initialData['person_responsible'] ?? '';
+      _postHeldController.text = widget.initialData['post_held'] ?? '';
       _pendingWithController.text = widget.initialData['pending_with'] ?? '';
-      _heldWithController.text = widget.initialData['held_with'] ?? '';
-      _tabImprintController.text = widget.initialData['tab_imprint'] ?? '';
 
       final sectionData = widget.initialData['section_data'] ?? {};
       _selectedStatus = sectionData['status'] ?? 'not_started';
@@ -76,9 +73,8 @@ class _BOQSectionState extends State<BOQSection> {
   void _notifyDataChanged() {
     widget.onDataChanged({
       'person_responsible': _personResponsibleController.text,
+      'post_held': _postHeldController.text,
       'pending_with': _pendingWithController.text,
-      'held_with': _heldWithController.text,
-      'tab_imprint': _tabImprintController.text,
       'section_data': {
         'status': _selectedStatus,
         if (_selectedStatus == 'in_progress' && _likelyCompletionDate != null)
@@ -91,33 +87,18 @@ class _BOQSectionState extends State<BOQSection> {
   @override
   void dispose() {
     _personResponsibleController.dispose();
+    _postHeldController.dispose();
     _pendingWithController.dispose();
-    _heldWithController.dispose();
-    _tabImprintController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          // Tab Imprint
-          TextFormField(
-            controller: _tabImprintController,
-            onChanged: (_) => _notifyDataChanged(),
-            decoration: const InputDecoration(
-              labelText: 'Tab Imprint (for summary badge)',
-              hintText: 'e.g., "500 Cr Total"',
-              prefixIcon: Icon(Icons.label_outline, size: 20),
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 24),
-
           // Status Selection (Checkboxes - exclusive)
           const Text(
             'Status',
@@ -191,8 +172,8 @@ class _BOQSectionState extends State<BOQSection> {
           // Common Fields
           SectionCommonFields(
             personResponsibleController: _personResponsibleController,
+            postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
-            heldWithController: _heldWithController,
           ),
         ],
       ),

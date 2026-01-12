@@ -3,35 +3,36 @@ import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../form_date_picker.dart';
 
-/// DPR Section - Detailed Project Report
-/// Checkboxes (exclusive - one at a time) with conditional date picker
-class DPRSection extends StatefulWidget {
+/// Technical Evaluation Section
+/// Status checkboxes with conditional fields
+class TechnicalEvaluationSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
-  const DPRSection({
+  const TechnicalEvaluationSection({
     super.key,
     required this.initialData,
     required this.onDataChanged,
   });
 
   @override
-  State<DPRSection> createState() => _DPRSectionState();
+  State<TechnicalEvaluationSection> createState() => _TechnicalEvaluationSectionState();
 }
 
-class _DPRSectionState extends State<DPRSection> {
+class _TechnicalEvaluationSectionState extends State<TechnicalEvaluationSection> {
   late TextEditingController _personResponsibleController;
   late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
+  late TextEditingController _qualifiedBiddersController;
+  late TextEditingController _remarksController;
 
   String _selectedStatus = 'not_started';
-  DateTime? _likelyCompletionDate;
+  DateTime? _completionDate;
 
   final List<Map<String, String>> _statusOptions = [
     {'value': 'not_started', 'label': 'Not Started'},
     {'value': 'in_progress', 'label': 'In Progress'},
-    {'value': 'submitted', 'label': 'Submitted'},
-    {'value': 'approved', 'label': 'Approved'},
+    {'value': 'completed', 'label': 'Completed'},
   ];
 
   @override
@@ -45,6 +46,8 @@ class _DPRSectionState extends State<DPRSection> {
     _personResponsibleController = TextEditingController();
     _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
+    _qualifiedBiddersController = TextEditingController();
+    _remarksController = TextEditingController();
   }
 
   void _loadInitialData() {
@@ -56,23 +59,33 @@ class _DPRSectionState extends State<DPRSection> {
 
       final sectionData = widget.initialData['section_data'] ?? {};
       _selectedStatus = sectionData['status'] ?? 'not_started';
-      if (sectionData['likely_completion_date'] != null) {
-        _likelyCompletionDate =
-            DateTime.parse(sectionData['likely_completion_date']);
+
+      if (_selectedStatus == 'completed') {
+        _qualifiedBiddersController.text = sectionData['qualified_bidders']?.toString() ?? '';
+        _remarksController.text = sectionData['remarks'] ?? '';
+        if (sectionData['completion_date'] != null) {
+          _completionDate = DateTime.parse(sectionData['completion_date']);
+        }
       }
     }
   }
 
   void _notifyDataChanged() {
+    final sectionData = <String, dynamic>{
+      'status': _selectedStatus,
+    };
+
+    if (_selectedStatus == 'completed') {
+      sectionData['completion_date'] = _completionDate?.toIso8601String();
+      sectionData['qualified_bidders'] = _qualifiedBiddersController.text;
+      sectionData['remarks'] = _remarksController.text;
+    }
+
     widget.onDataChanged({
       'person_responsible': _personResponsibleController.text,
       'post_held': _postHeldController.text,
       'pending_with': _pendingWithController.text,
-      'section_data': {
-        'status': _selectedStatus,
-        if (_selectedStatus == 'in_progress' && _likelyCompletionDate != null)
-          'likely_completion_date': _likelyCompletionDate!.toIso8601String(),
-      },
+      'section_data': sectionData,
     });
   }
 
@@ -81,6 +94,8 @@ class _DPRSectionState extends State<DPRSection> {
     _personResponsibleController.dispose();
     _postHeldController.dispose();
     _pendingWithController.dispose();
+    _qualifiedBiddersController.dispose();
+    _remarksController.dispose();
     super.dispose();
   }
 
@@ -91,7 +106,7 @@ class _DPRSectionState extends State<DPRSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status Selection (Checkboxes - exclusive)
+          // Status Selection
           const Text(
             'Status',
             style: TextStyle(
@@ -121,18 +136,45 @@ class _DPRSectionState extends State<DPRSection> {
             );
           }),
 
-          // Conditional: Likely Completion Date (only if in_progress)
-          if (_selectedStatus == 'in_progress') ...[
+          // Conditional fields (if completed)
+          if (_selectedStatus == 'completed') ...[
             const SizedBox(height: 24),
             FormDatePicker(
-              label: 'Likely Completion Date',
-              selectedDate: _likelyCompletionDate,
+              label: 'Completion Date',
+              selectedDate: _completionDate,
               onDateSelected: (date) {
                 setState(() {
-                  _likelyCompletionDate = date;
+                  _completionDate = date;
                   _notifyDataChanged();
                 });
               },
+            ),
+            const SizedBox(height: 16),
+
+            TextFormField(
+              controller: _qualifiedBiddersController,
+              onChanged: (_) => _notifyDataChanged(),
+              decoration: const InputDecoration(
+                labelText: 'Number of Qualified Bidders',
+                hintText: 'e.g., 2',
+                prefixIcon: Icon(Icons.check_circle, size: 20),
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 16),
+
+            TextFormField(
+              controller: _remarksController,
+              onChanged: (_) => _notifyDataChanged(),
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'Remarks',
+                hintText: 'Enter remarks',
+                prefixIcon: Icon(Icons.notes, size: 20),
+                border: OutlineInputBorder(),
+                alignLabelWithHint: true,
+              ),
             ),
           ],
 

@@ -1,37 +1,37 @@
 import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
-import '../form_date_picker.dart';
 
-/// DPR Section - Detailed Project Report
-/// Checkboxes (exclusive - one at a time) with conditional date picker
-class DPRSection extends StatefulWidget {
+/// Bid Acceptance Section
+/// Status radio buttons (5 options)
+class BidAcceptanceSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
-  const DPRSection({
+  const BidAcceptanceSection({
     super.key,
     required this.initialData,
     required this.onDataChanged,
   });
 
   @override
-  State<DPRSection> createState() => _DPRSectionState();
+  State<BidAcceptanceSection> createState() => _BidAcceptanceSectionState();
 }
 
-class _DPRSectionState extends State<DPRSection> {
+class _BidAcceptanceSectionState extends State<BidAcceptanceSection> {
   late TextEditingController _personResponsibleController;
   late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
+  late TextEditingController _remarksController;
 
-  String _selectedStatus = 'not_started';
-  DateTime? _likelyCompletionDate;
+  String _selectedStatus = 'pending';
 
   final List<Map<String, String>> _statusOptions = [
-    {'value': 'not_started', 'label': 'Not Started'},
-    {'value': 'in_progress', 'label': 'In Progress'},
-    {'value': 'submitted', 'label': 'Submitted'},
-    {'value': 'approved', 'label': 'Approved'},
+    {'value': 'pending', 'label': 'Pending'},
+    {'value': 'accepted', 'label': 'Accepted'},
+    {'value': 'rejected', 'label': 'Rejected'},
+    {'value': 'on_hold', 'label': 'On Hold'},
+    {'value': 'cancelled', 'label': 'Cancelled'},
   ];
 
   @override
@@ -45,6 +45,7 @@ class _DPRSectionState extends State<DPRSection> {
     _personResponsibleController = TextEditingController();
     _postHeldController = TextEditingController();
     _pendingWithController = TextEditingController();
+    _remarksController = TextEditingController();
   }
 
   void _loadInitialData() {
@@ -55,11 +56,8 @@ class _DPRSectionState extends State<DPRSection> {
       _pendingWithController.text = widget.initialData['pending_with'] ?? '';
 
       final sectionData = widget.initialData['section_data'] ?? {};
-      _selectedStatus = sectionData['status'] ?? 'not_started';
-      if (sectionData['likely_completion_date'] != null) {
-        _likelyCompletionDate =
-            DateTime.parse(sectionData['likely_completion_date']);
-      }
+      _selectedStatus = sectionData['status'] ?? 'pending';
+      _remarksController.text = sectionData['remarks'] ?? '';
     }
   }
 
@@ -70,8 +68,7 @@ class _DPRSectionState extends State<DPRSection> {
       'pending_with': _pendingWithController.text,
       'section_data': {
         'status': _selectedStatus,
-        if (_selectedStatus == 'in_progress' && _likelyCompletionDate != null)
-          'likely_completion_date': _likelyCompletionDate!.toIso8601String(),
+        'remarks': _remarksController.text,
       },
     });
   }
@@ -81,6 +78,7 @@ class _DPRSectionState extends State<DPRSection> {
     _personResponsibleController.dispose();
     _postHeldController.dispose();
     _pendingWithController.dispose();
+    _remarksController.dispose();
     super.dispose();
   }
 
@@ -91,9 +89,8 @@ class _DPRSectionState extends State<DPRSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status Selection (Checkboxes - exclusive)
           const Text(
-            'Status',
+            'Bid Acceptance Status',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -103,38 +100,35 @@ class _DPRSectionState extends State<DPRSection> {
           const SizedBox(height: 12),
 
           ..._statusOptions.map((option) {
-            final isSelected = _selectedStatus == option['value'];
-            return CheckboxListTile(
+            return RadioListTile<String>(
               title: Text(option['label']!),
-              value: isSelected,
-              onChanged: (checked) {
-                if (checked == true) {
-                  setState(() {
-                    _selectedStatus = option['value']!;
-                    _notifyDataChanged();
-                  });
-                }
-              },
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-            );
-          }),
-
-          // Conditional: Likely Completion Date (only if in_progress)
-          if (_selectedStatus == 'in_progress') ...[
-            const SizedBox(height: 24),
-            FormDatePicker(
-              label: 'Likely Completion Date',
-              selectedDate: _likelyCompletionDate,
-              onDateSelected: (date) {
+              value: option['value']!,
+              groupValue: _selectedStatus,
+              onChanged: (value) {
                 setState(() {
-                  _likelyCompletionDate = date;
+                  _selectedStatus = value!;
                   _notifyDataChanged();
                 });
               },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            );
+          }),
+
+          const SizedBox(height: 24),
+
+          TextFormField(
+            controller: _remarksController,
+            onChanged: (_) => _notifyDataChanged(),
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: 'Remarks',
+              hintText: 'Enter remarks',
+              prefixIcon: Icon(Icons.notes, size: 20),
+              border: OutlineInputBorder(),
+              alignLabelWithHint: true,
             ),
-          ],
+          ),
 
           // Common Fields
           SectionCommonFields(

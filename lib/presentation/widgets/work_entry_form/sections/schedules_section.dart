@@ -3,23 +3,23 @@ import '../../../../theme/app_colors.dart';
 import '../section_common_fields.dart';
 import '../form_date_picker.dart';
 
-/// DPR Section - Detailed Project Report
-/// Checkboxes (exclusive - one at a time) with conditional date picker
-class DPRSection extends StatefulWidget {
+/// Schedules Section
+/// Status checkboxes with conditional date picker
+class SchedulesSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
-  const DPRSection({
+  const SchedulesSection({
     super.key,
     required this.initialData,
     required this.onDataChanged,
   });
 
   @override
-  State<DPRSection> createState() => _DPRSectionState();
+  State<SchedulesSection> createState() => _SchedulesSectionState();
 }
 
-class _DPRSectionState extends State<DPRSection> {
+class _SchedulesSectionState extends State<SchedulesSection> {
   late TextEditingController _personResponsibleController;
   late TextEditingController _postHeldController;
   late TextEditingController _pendingWithController;
@@ -30,8 +30,7 @@ class _DPRSectionState extends State<DPRSection> {
   final List<Map<String, String>> _statusOptions = [
     {'value': 'not_started', 'label': 'Not Started'},
     {'value': 'in_progress', 'label': 'In Progress'},
-    {'value': 'submitted', 'label': 'Submitted'},
-    {'value': 'approved', 'label': 'Approved'},
+    {'value': 'completed', 'label': 'Completed'},
   ];
 
   @override
