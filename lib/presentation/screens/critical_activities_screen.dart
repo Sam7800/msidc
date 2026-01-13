@@ -30,7 +30,7 @@ class _CriticalActivitiesScreenState
     extends ConsumerState<CriticalActivitiesScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  bool _isListView = true; // true = list view, false = table view
+  bool _isListView = false; // true = list view, false = table view (DEFAULT: table view)
   List<Map<String, dynamic>> _criticalActivities = [];
   bool _isLoading = true;
 
@@ -61,6 +61,13 @@ class _CriticalActivitiesScreenState
     } else {
       // All projects
       activities = await repo.getAllCriticalSubsections();
+    }
+
+    // Debug: Print first activity to see what data we're getting
+    if (activities.isNotEmpty) {
+      print('DEBUG: First activity data: ${activities.first}');
+      print('DEBUG: person_responsible: ${activities.first['person_responsible']}');
+      print('DEBUG: pending_with: ${activities.first['pending_with']}');
     }
 
     if (mounted) {
@@ -402,39 +409,32 @@ class _CriticalActivitiesScreenState
 
   Widget _buildTableView() {
     return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: SizedBox(
+          width: double.infinity,
           child: DataTable(
             headingRowColor: MaterialStateProperty.all(Colors.grey[100]),
             border: TableBorder.all(color: AppColors.border, width: 0.5),
+            columnSpacing: 24,
+            horizontalMargin: 16,
             columns: const [
-              DataColumn(label: Text('Project', style: TextStyle(fontWeight: FontWeight.w600))),
               DataColumn(label: Text('Category', style: TextStyle(fontWeight: FontWeight.w600))),
-              DataColumn(label: Text('Section', style: TextStyle(fontWeight: FontWeight.w600))),
+              DataColumn(label: Text('Project', style: TextStyle(fontWeight: FontWeight.w600))),
+              DataColumn(label: Text('Activity', style: TextStyle(fontWeight: FontWeight.w600))),
               DataColumn(label: Text('Status/Option', style: TextStyle(fontWeight: FontWeight.w600))),
               DataColumn(label: Text('Person Responsible', style: TextStyle(fontWeight: FontWeight.w600))),
               DataColumn(label: Text('Pending With', style: TextStyle(fontWeight: FontWeight.w600))),
-              DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.w600))),
             ],
             rows: _filteredActivities.map((activity) {
               return DataRow(
                 cells: [
-                  DataCell(Text(activity['project_name'] ?? '')),
                   DataCell(Text(activity['category_name'] ?? '')),
+                  DataCell(Text(activity['project_name'] ?? '')),
                   DataCell(Text(activity['section_name'] ?? '')),
                   DataCell(Text(activity['option_name'] ?? '')),
                   DataCell(Text(activity['person_responsible'] ?? '-')),
                   DataCell(Text(activity['pending_with'] ?? '-')),
-                  DataCell(
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, size: 18),
-                      color: Colors.red[400],
-                      tooltip: 'Remove',
-                      onPressed: () => _toggleCritical(activity),
-                    ),
-                  ),
                 ],
               );
             }).toList(),

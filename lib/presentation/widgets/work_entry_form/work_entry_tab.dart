@@ -65,6 +65,47 @@ class _WorkEntryTabState extends ConsumerState<WorkEntryTab> {
   bool _isLoading = true;
   String _searchQuery = '';
 
+  // Section key to human-readable name mapping (must match CriticalBellIcon section names)
+  final Map<String, String> _sectionKeyToName = {
+    'aa': 'AA',
+    'dpr': 'DPR',
+    'boq': 'BOQ',
+    'schedules': 'Schedules',
+    'drawings': 'Drawings',
+    'bid_documents': 'Bid Documents',
+    'env': 'ENV',
+    'la': 'LA',
+    'utility_shifting': 'Utility Shifting',
+    'ts': 'TS',
+    'nit': 'NIT',
+    'pre_bid': 'Pre Bid',
+    'csd': 'CSD',
+    'bid_submission': 'Bid Submission',
+    'technical_evaluation': 'Technical Evaluation',
+    'financial_bid': 'Financial Bid',
+    'bid_acceptance': 'Bid Acceptance',
+    'loa': 'LOA',
+    'pbg': 'PBG',
+    'work_order': 'Work Order',
+    'agreement_amount': 'Agreement Amount',
+    'appointed_date': 'Appointed Date',
+    'tender_period': 'Tender Period',
+    'ms1': 'MS-I',
+    'ms2': 'MS-II',
+    'ms3': 'MS-III',
+    'ms4': 'MS-IV',
+    'ms5': 'MS-V',
+    'ld': 'LD',
+    'eot': 'EOT',
+    'cos': 'COS',
+    'expenditure': 'Expenditure',
+    'audit_para': 'Audit Para',
+    'laq': 'LAQ',
+    'technical_audit': 'Technical Audit',
+    'rev_aa': 'Revised AA',
+    'supplementary_agreement': 'Supplementary Agreement',
+  };
+
   // Define all 35 sections in correct sequence
   final List<Map<String, dynamic>> _sections = [
     {'id': 'aa', 'name': 'AA - Administrative Approval', 'subtitle': 'Awaited or Accorded with details', 'icon': Icons.approval, 'color': Colors.green},
@@ -140,9 +181,18 @@ class _WorkEntryTabState extends ConsumerState<WorkEntryTab> {
           .getSectionsByWorkEntryId(_workEntryId!);
 
       // 3. Populate _sectionData map
+      // Create reverse mapping: human-readable name -> key
+      final nameToKey = <String, String>{};
+      for (final entry in _sectionKeyToName.entries) {
+        nameToKey[entry.value] = entry.key;
+      }
+
       final loadedData = <String, Map<String, dynamic>>{};
       for (final section in sections) {
-        loadedData[section.sectionName] = {
+        // Convert human-readable name back to key, or try the name as-is
+        final sectionKey = nameToKey[section.sectionName] ?? section.sectionName;
+
+        loadedData[sectionKey] = {
           'person_responsible': section.personResponsible,
           'post_held': section.heldWith,
           'pending_with': section.pendingWith,
@@ -190,8 +240,11 @@ class _WorkEntryTabState extends ConsumerState<WorkEntryTab> {
 
       // Save each section
       for (final entry in _sectionData.entries) {
-        final sectionName = entry.key;
+        final sectionKey = entry.key;
         final data = entry.value;
+
+        // Convert key to human-readable name that matches CriticalBellIcon
+        final sectionName = _sectionKeyToName[sectionKey] ?? sectionKey;
 
         final section = WorkEntrySection(
           workEntryId: _workEntryId!,
