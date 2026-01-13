@@ -10,12 +10,14 @@ class AuditParaSection extends StatefulWidget {
   final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const AuditParaSection({
     super.key,
     required this.projectId,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -138,12 +140,12 @@ class _AuditParaSectionState extends State<AuditParaSection> {
                   title: const Text('Not applicable'),
                   value: 'na',
                   groupValue: _applicability,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _applicability = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -153,12 +155,12 @@ class _AuditParaSectionState extends State<AuditParaSection> {
                   title: const Text('Applicable'),
                   value: 'applicable',
                   groupValue: _applicability,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _applicability = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -178,6 +180,7 @@ class _AuditParaSectionState extends State<AuditParaSection> {
             const SizedBox(height: 8),
             TextFormField(
               controller: _draftParasController,
+              enabled: widget.isEditMode,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
                 hintText: 'Enter number',
@@ -200,6 +203,7 @@ class _AuditParaSectionState extends State<AuditParaSection> {
             DynamicTableWidget(
               columnHeaders: const ['Sr. No.', 'Para Short Description', 'Date of issue', 'Remarks'],
               rows: _detailsOfParasRows,
+              enabled: widget.isEditMode,
               onRowsChanged: (rows) {
                 setState(() {
                   _detailsOfParasRows = rows;
@@ -218,6 +222,7 @@ class _AuditParaSectionState extends State<AuditParaSection> {
             const SizedBox(height: 8),
             TextFormField(
               controller: _responsiblePersonController,
+              enabled: widget.isEditMode,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
                 hintText: 'Enter name',
@@ -250,6 +255,7 @@ class _AuditParaSectionState extends State<AuditParaSection> {
             DynamicTableWidget(
               columnHeaders: const ['Sr. No.', 'Para Short Description', 'Date of submission', 'Status'],
               rows: _repliesSubmittedRows,
+              enabled: widget.isEditMode,
               onRowsChanged: (rows) {
                 setState(() {
                   _repliesSubmittedRows = rows;
@@ -273,6 +279,7 @@ class _AuditParaSectionState extends State<AuditParaSection> {
             DynamicTableWidget(
               columnHeaders: const ['Sr. No.', 'Para Short Description', 'Date of Closure', 'Remarks'],
               rows: _parasClosedRows,
+              enabled: widget.isEditMode,
               onRowsChanged: (rows) {
                 setState(() {
                   _parasClosedRows = rows;
@@ -290,6 +297,8 @@ class _AuditParaSectionState extends State<AuditParaSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

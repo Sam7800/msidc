@@ -8,12 +8,14 @@ import '../critical_bell_icon.dart';
 /// Checkboxes (exclusive - one at a time) with conditional date picker
 class DPRSection extends StatefulWidget {
   final int? projectId;
+  final bool isEditMode;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const DPRSection({
     super.key,
     required this.projectId,
+    required this.isEditMode,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -114,23 +116,27 @@ class _DPRSectionState extends State<DPRSection> {
                 children: [
                   Checkbox(
                     value: isSelected,
-                    onChanged: (checked) {
-                      if (checked == true) {
-                        setState(() {
-                          _selectedStatus = option['value']!;
-                          _notifyDataChanged();
-                        });
-                      }
-                    },
+                    onChanged: widget.isEditMode
+                        ? (checked) {
+                            if (checked == true) {
+                              setState(() {
+                                _selectedStatus = option['value']!;
+                                _notifyDataChanged();
+                              });
+                            }
+                          }
+                        : null,
                   ),
                   Expanded(
                     child: InkWell(
-                      onTap: () {
-                        setState(() {
-                          _selectedStatus = option['value']!;
-                          _notifyDataChanged();
-                        });
-                      },
+                      onTap: widget.isEditMode
+                          ? () {
+                              setState(() {
+                                _selectedStatus = option['value']!;
+                                _notifyDataChanged();
+                              });
+                            }
+                          : null,
                       child: Text(
                         option['label']!,
                         style: const TextStyle(fontSize: 14),
@@ -154,6 +160,7 @@ class _DPRSectionState extends State<DPRSection> {
             FormDatePicker(
               label: 'Likely Completion Date',
               selectedDate: _likelyCompletionDate,
+              enabled: widget.isEditMode,
               onDateSelected: (date) {
                 setState(() {
                   _likelyCompletionDate = date;
@@ -168,6 +175,8 @@ class _DPRSectionState extends State<DPRSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

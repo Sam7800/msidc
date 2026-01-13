@@ -8,6 +8,7 @@ class FormDatePicker extends StatelessWidget {
   final DateTime? selectedDate;
   final Function(DateTime?) onDateSelected;
   final bool isRequired;
+  final bool enabled;
 
   const FormDatePicker({
     super.key,
@@ -15,6 +16,7 @@ class FormDatePicker extends StatelessWidget {
     required this.selectedDate,
     required this.onDateSelected,
     this.isRequired = false,
+    this.enabled = true,
   });
 
   Future<void> _selectDate(BuildContext context) async {
@@ -32,18 +34,19 @@ class FormDatePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => _selectDate(context),
+      onTap: enabled ? () => _selectDate(context) : null,
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label + (isRequired ? ' *' : ''),
           prefixIcon: const Icon(Icons.calendar_today, size: 20),
-          suffixIcon: selectedDate != null
+          suffixIcon: selectedDate != null && enabled
               ? IconButton(
                   icon: const Icon(Icons.clear, size: 18),
                   onPressed: () => onDateSelected(null),
                 )
               : null,
           border: const OutlineInputBorder(),
+          enabled: enabled,
         ),
         child: Text(
           selectedDate != null
@@ -52,8 +55,8 @@ class FormDatePicker extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             color: selectedDate != null
-                ? AppColors.textPrimary
-                : AppColors.textTertiary,
+                ? (enabled ? AppColors.textPrimary : Colors.grey)
+                : (enabled ? AppColors.textTertiary : Colors.grey.shade400),
           ),
         ),
       ),

@@ -9,12 +9,16 @@ class SectionCommonFields extends StatefulWidget {
   final TextEditingController personResponsibleController;
   final TextEditingController postHeldController;
   final TextEditingController pendingWithController;
+  final bool enabled;
+  final VoidCallback? onChanged;
 
   const SectionCommonFields({
     super.key,
     required this.personResponsibleController,
     required this.postHeldController,
     required this.pendingWithController,
+    this.enabled = true,
+    this.onChanged,
   });
 
   @override
@@ -44,6 +48,8 @@ class _SectionCommonFieldsState extends State<SectionCommonFields> {
           Expanded(
             child: TextFormField(
               controller: controller,
+              enabled: widget.enabled,
+              onChanged: (_) => widget.onChanged?.call(),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: const TextStyle(

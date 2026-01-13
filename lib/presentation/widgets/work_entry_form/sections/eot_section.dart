@@ -10,12 +10,14 @@ class EOTSection extends StatefulWidget {
   final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const EOTSection({
     super.key,
     required this.projectId,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -146,12 +148,12 @@ class _EOTSectionState extends State<EOTSection> {
                   title: const Text('Not Applicable'),
                   value: 'na',
                   groupValue: _applicability,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _applicability = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -161,12 +163,12 @@ class _EOTSectionState extends State<EOTSection> {
                   title: const Text('Applicable'),
                   value: 'applicable',
                   groupValue: _applicability,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _applicability = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -183,12 +185,12 @@ class _EOTSectionState extends State<EOTSection> {
               title: const Text('Proposal Not started'),
               value: 'not_started',
               groupValue: _proposalStatus,
-              onChanged: (value) {
+              onChanged: widget.isEditMode ? (value) {
                 setState(() {
                   _proposalStatus = value!;
                   _notifyDataChanged();
                 });
-              },
+              } : null,
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -198,12 +200,12 @@ class _EOTSectionState extends State<EOTSection> {
               title: const Text('Proposal under Consideration – Period (Months)'),
               value: 'under_consideration',
               groupValue: _proposalStatus,
-              onChanged: (value) {
+              onChanged: widget.isEditMode ? (value) {
                 setState(() {
                   _proposalStatus = value!;
                   _notifyDataChanged();
                 });
-              },
+              } : null,
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -214,6 +216,7 @@ class _EOTSectionState extends State<EOTSection> {
                 child: TextFormField(
                   controller: _periodUnderConsiderationController,
                   onChanged: (_) => _notifyDataChanged(),
+                  enabled: widget.isEditMode,
                   decoration: const InputDecoration(
                     hintText: 'Enter period in months',
                     border: OutlineInputBorder(),
@@ -230,12 +233,12 @@ class _EOTSectionState extends State<EOTSection> {
                 Radio<String>(
                   value: 'submitted',
                   groupValue: _proposalStatus,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _proposalStatus = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                 ),
                 const Text(
                   'Proposal Submitted: Date',
@@ -262,6 +265,7 @@ class _EOTSectionState extends State<EOTSection> {
                       _notifyDataChanged();
                     });
                   },
+                  enabled: widget.isEditMode,
                 ),
               ),
             ],
@@ -276,6 +280,7 @@ class _EOTSectionState extends State<EOTSection> {
             TextFormField(
               controller: _approvedPeriodController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter approved period in months',
                 border: OutlineInputBorder(),
@@ -297,12 +302,12 @@ class _EOTSectionState extends State<EOTSection> {
               title: const Text('With Escalation'),
               value: 'with_escalation',
               groupValue: _escalationStatus,
-              onChanged: (value) {
+              onChanged: widget.isEditMode ? (value) {
                 setState(() {
                   _escalationStatus = value!;
                   _notifyDataChanged();
                 });
-              },
+              } : null,
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -310,12 +315,12 @@ class _EOTSectionState extends State<EOTSection> {
               title: const Text('Without Escalation'),
               value: 'without_escalation',
               groupValue: _escalationStatus,
-              onChanged: (value) {
+              onChanged: widget.isEditMode ? (value) {
                 setState(() {
                   _escalationStatus = value!;
                   _notifyDataChanged();
                 });
-              },
+              } : null,
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -324,12 +329,12 @@ class _EOTSectionState extends State<EOTSection> {
             CheckboxListTile(
               title: const Text('By freezing Indices'),
               value: _byFreezingIndices,
-              onChanged: (value) {
+              onChanged: widget.isEditMode ? (value) {
                 setState(() {
                   _byFreezingIndices = value ?? false;
                   _notifyDataChanged();
                 });
-              },
+              } : null,
               dense: true,
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
@@ -342,12 +347,12 @@ class _EOTSectionState extends State<EOTSection> {
               title: const Text('Without LD'),
               value: 'without_ld',
               groupValue: _ldStatus,
-              onChanged: (value) {
+              onChanged: widget.isEditMode ? (value) {
                 setState(() {
                   _ldStatus = value!;
                   _notifyDataChanged();
                 });
-              },
+              } : null,
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -355,12 +360,12 @@ class _EOTSectionState extends State<EOTSection> {
               title: const Text('With LD'),
               value: 'with_ld',
               groupValue: _ldStatus,
-              onChanged: (value) {
+              onChanged: widget.isEditMode ? (value) {
                 setState(() {
                   _ldStatus = value!;
                   _notifyDataChanged();
                 });
-              },
+              } : null,
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -379,12 +384,12 @@ class _EOTSectionState extends State<EOTSection> {
                     title: const Text('Yes'),
                     value: 'yes',
                     groupValue: _compensationPayable,
-                    onChanged: (value) {
+                    onChanged: widget.isEditMode ? (value) {
                       setState(() {
                         _compensationPayable = value!;
                         _notifyDataChanged();
                       });
-                    },
+                    } : null,
                     dense: true,
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -394,12 +399,12 @@ class _EOTSectionState extends State<EOTSection> {
                     title: const Text('No'),
                     value: 'no',
                     groupValue: _compensationPayable,
-                    onChanged: (value) {
+                    onChanged: widget.isEditMode ? (value) {
                       setState(() {
                         _compensationPayable = value!;
                         _notifyDataChanged();
                       });
-                    },
+                    } : null,
                     dense: true,
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -420,6 +425,7 @@ class _EOTSectionState extends State<EOTSection> {
               TextFormField(
                 controller: _compensationClaimedController,
                 onChanged: (_) => _notifyDataChanged(),
+                enabled: widget.isEditMode,
                 decoration: const InputDecoration(
                   hintText: 'Enter amount',
                   prefixIcon: Icon(Icons.currency_rupee, size: 20),
@@ -438,6 +444,7 @@ class _EOTSectionState extends State<EOTSection> {
               TextFormField(
                 controller: _compensationAdmittedController,
                 onChanged: (_) => _notifyDataChanged(),
+                enabled: widget.isEditMode,
                 decoration: const InputDecoration(
                   hintText: 'Enter amount',
                   prefixIcon: Icon(Icons.currency_rupee, size: 20),
@@ -455,6 +462,8 @@ class _EOTSectionState extends State<EOTSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

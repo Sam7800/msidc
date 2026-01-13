@@ -7,11 +7,13 @@ import '../section_common_fields.dart';
 class TechnicalAuditSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const TechnicalAuditSection({
     super.key,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -122,12 +124,12 @@ class _TechnicalAuditSectionState extends State<TechnicalAuditSection> {
                   title: const Text('Not done'),
                   value: 'not_done',
                   groupValue: _status,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _status = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -137,12 +139,12 @@ class _TechnicalAuditSectionState extends State<TechnicalAuditSection> {
                   title: const Text('Carried Out'),
                   value: 'carried_out',
                   groupValue: _status,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _status = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -163,6 +165,7 @@ class _TechnicalAuditSectionState extends State<TechnicalAuditSection> {
             TextFormField(
               controller: _findingsCountController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter number',
                 border: OutlineInputBorder(),
@@ -180,6 +183,7 @@ class _TechnicalAuditSectionState extends State<TechnicalAuditSection> {
             TextFormField(
               controller: _detailsOfFindingsController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               maxLines: 3,
               decoration: const InputDecoration(
                 hintText: 'Enter details',
@@ -197,6 +201,7 @@ class _TechnicalAuditSectionState extends State<TechnicalAuditSection> {
             TextFormField(
               controller: _responsibleEEController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter name',
                 border: OutlineInputBorder(),
@@ -213,6 +218,7 @@ class _TechnicalAuditSectionState extends State<TechnicalAuditSection> {
             TextFormField(
               controller: _complianceController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter details',
                 border: OutlineInputBorder(),
@@ -227,6 +233,8 @@ class _TechnicalAuditSectionState extends State<TechnicalAuditSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

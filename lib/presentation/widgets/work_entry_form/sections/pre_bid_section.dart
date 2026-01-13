@@ -8,11 +8,13 @@ import '../form_date_picker.dart';
 class PreBidSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const PreBidSection({
     super.key,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -87,6 +89,7 @@ class _PreBidSectionState extends State<PreBidSection> {
           FormDatePicker(
             label: 'Pre-bid Meeting Date',
             selectedDate: _preBidDate,
+            enabled: widget.isEditMode,
             onDateSelected: (date) {
               setState(() {
                 _preBidDate = date;
@@ -99,6 +102,7 @@ class _PreBidSectionState extends State<PreBidSection> {
           TextFormField(
             controller: _biddersCountController,
             onChanged: (_) => _notifyDataChanged(),
+            enabled: widget.isEditMode,
             decoration: const InputDecoration(
               labelText: 'Number of Bidders Attended',
               hintText: 'e.g., 5',
@@ -113,6 +117,8 @@ class _PreBidSectionState extends State<PreBidSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

@@ -9,12 +9,14 @@ import '../critical_bell_icon.dart';
 /// Checkboxes with dynamic table
 class BOQSection extends StatefulWidget {
   final int? projectId;
+  final bool isEditMode;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const BOQSection({
     super.key,
     required this.projectId,
+    required this.isEditMode,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -118,14 +120,16 @@ class _BOQSectionState extends State<BOQSection> {
             return CheckboxListTile(
               title: Text(option['label']!),
               value: isSelected,
-              onChanged: (checked) {
-                if (checked == true) {
-                  setState(() {
-                    _selectedStatus = option['value']!;
-                    _notifyDataChanged();
-                  });
-                }
-              },
+              onChanged: widget.isEditMode
+                  ? (checked) {
+                      if (checked == true) {
+                        setState(() {
+                          _selectedStatus = option['value']!;
+                          _notifyDataChanged();
+                        });
+                      }
+                    }
+                  : null,
               dense: true,
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
@@ -138,6 +142,7 @@ class _BOQSectionState extends State<BOQSection> {
             FormDatePicker(
               label: 'Likely Completion Date',
               selectedDate: _likelyCompletionDate,
+              enabled: widget.isEditMode,
               onDateSelected: (date) {
                 setState(() {
                   _likelyCompletionDate = date;
@@ -162,6 +167,7 @@ class _BOQSectionState extends State<BOQSection> {
             DynamicTableWidget(
               columnHeaders: const ['Sr. No.', 'Broad Items', 'Amount'],
               rows: _tableRows,
+              enabled: widget.isEditMode,
               onRowsChanged: (rows) {
                 setState(() {
                   _tableRows = rows;
@@ -177,6 +183,8 @@ class _BOQSectionState extends State<BOQSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

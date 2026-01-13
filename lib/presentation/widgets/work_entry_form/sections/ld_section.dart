@@ -8,11 +8,13 @@ import '../form_date_picker.dart';
 class LDSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const LDSection({
     super.key,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -125,12 +127,12 @@ class _LDSectionState extends State<LDSection> {
             title: const Text('Not Applicable'),
             value: 'na',
             groupValue: _applicability,
-            onChanged: (value) {
+            onChanged: widget.isEditMode ? (value) {
               setState(() {
                 _applicability = value!;
                 _notifyDataChanged();
               });
-            },
+            } : null,
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),
@@ -140,12 +142,12 @@ class _LDSectionState extends State<LDSection> {
             title: const Text('Applicable'),
             value: 'applicable',
             groupValue: _applicability,
-            onChanged: (value) {
+            onChanged: widget.isEditMode ? (value) {
               setState(() {
                 _applicability = value!;
                 _notifyDataChanged();
               });
-            },
+            } : null,
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),
@@ -163,6 +165,7 @@ class _LDSectionState extends State<LDSection> {
             TextFormField(
               controller: _amountImposedPerWeekController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter amount',
                 prefixIcon: Icon(Icons.currency_rupee, size: 20),
@@ -181,6 +184,7 @@ class _LDSectionState extends State<LDSection> {
             TextFormField(
               controller: _amountRecoveredController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter amount',
                 prefixIcon: Icon(Icons.currency_rupee, size: 20),
@@ -199,6 +203,7 @@ class _LDSectionState extends State<LDSection> {
             TextFormField(
               controller: _amountDepositedController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter amount',
                 prefixIcon: Icon(Icons.currency_rupee, size: 20),
@@ -217,6 +222,7 @@ class _LDSectionState extends State<LDSection> {
             TextFormField(
               controller: _amountReleasedController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter amount',
                 prefixIcon: Icon(Icons.currency_rupee, size: 20),
@@ -235,6 +241,7 @@ class _LDSectionState extends State<LDSection> {
             TextFormField(
               controller: _finalAmountRecoveredController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter amount',
                 prefixIcon: Icon(Icons.currency_rupee, size: 20),
@@ -251,6 +258,8 @@ class _LDSectionState extends State<LDSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

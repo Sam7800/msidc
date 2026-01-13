@@ -9,12 +9,14 @@ import '../critical_bell_icon.dart';
 /// Radio: Not Issued/Issued with status checkboxes and tables
 class NITSection extends StatefulWidget {
   final int? projectId;
+  final bool isEditMode;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const NITSection({
     super.key,
     required this.projectId,
+    required this.isEditMode,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -157,12 +159,12 @@ class _NITSectionState extends State<NITSection> {
                   title: const Text('Not Issued'),
                   value: 'not_issued',
                   groupValue: _issuedStatus,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _issuedStatus = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -172,12 +174,12 @@ class _NITSectionState extends State<NITSection> {
                   title: const Text('Issued'),
                   value: 'issued',
                   groupValue: _issuedStatus,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _issuedStatus = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -201,6 +203,7 @@ class _NITSectionState extends State<NITSection> {
                         _notifyDataChanged();
                       });
                     },
+                    enabled: widget.isEditMode,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -228,6 +231,7 @@ class _NITSectionState extends State<NITSection> {
                         _notifyDataChanged();
                       });
                     },
+                    enabled: widget.isEditMode,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -241,6 +245,7 @@ class _NITSectionState extends State<NITSection> {
                       prefixIcon: Icon(Icons.currency_rupee, size: 20),
                       border: OutlineInputBorder(),
                     ),
+                    enabled: widget.isEditMode,
                   ),
                 ),
               ],
@@ -267,6 +272,7 @@ class _NITSectionState extends State<NITSection> {
                 });
               },
               addButtonLabel: 'Add Item',
+              enabled: widget.isEditMode,
             ),
             const SizedBox(height: 24),
 
@@ -290,6 +296,7 @@ class _NITSectionState extends State<NITSection> {
                   _notifyDataChanged();
                 });
               },
+              enabled: widget.isEditMode,
             ),
             const SizedBox(height: 16),
 
@@ -303,6 +310,7 @@ class _NITSectionState extends State<NITSection> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
+              enabled: widget.isEditMode,
             ),
             const SizedBox(height: 16),
 
@@ -316,6 +324,7 @@ class _NITSectionState extends State<NITSection> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
+              enabled: widget.isEditMode,
             ),
             const SizedBox(height: 16),
 
@@ -328,6 +337,7 @@ class _NITSectionState extends State<NITSection> {
                   _notifyDataChanged();
                 });
               },
+              enabled: widget.isEditMode,
             ),
             const SizedBox(height: 24),
 
@@ -351,6 +361,7 @@ class _NITSectionState extends State<NITSection> {
                 });
               },
               addButtonLabel: 'Add EMD Amount',
+              enabled: widget.isEditMode,
             ),
           ],
 
@@ -359,6 +370,8 @@ class _NITSectionState extends State<NITSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

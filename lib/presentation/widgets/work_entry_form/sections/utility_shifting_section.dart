@@ -10,12 +10,14 @@ class UtilityShiftingSection extends StatefulWidget {
   final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const UtilityShiftingSection({
     super.key,
     required this.projectId,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -134,12 +136,12 @@ class _UtilityShiftingSectionState extends State<UtilityShiftingSection> {
                   title: const Text('N/A'),
                   value: 'na',
                   groupValue: _applicability,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _applicability = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -149,12 +151,12 @@ class _UtilityShiftingSectionState extends State<UtilityShiftingSection> {
                   title: const Text('Applicable'),
                   value: 'applicable',
                   groupValue: _applicability,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _applicability = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -187,23 +189,23 @@ class _UtilityShiftingSectionState extends State<UtilityShiftingSection> {
                   children: [
                     Checkbox(
                       value: isSelected,
-                      onChanged: (checked) {
+                      onChanged: widget.isEditMode ? (checked) {
                         if (checked == true) {
                           setState(() {
                             _selectedStatus = option['value']!;
                             _notifyDataChanged();
                           });
                         }
-                      },
+                      } : null,
                     ),
                     Expanded(
                       child: InkWell(
-                        onTap: () {
+                        onTap: widget.isEditMode ? () {
                           setState(() {
                             _selectedStatus = option['value']!;
                             _notifyDataChanged();
                           });
-                        },
+                        } : null,
                         child: Text(
                           option['label']!,
                           style: const TextStyle(fontSize: 14),
@@ -228,6 +230,7 @@ class _UtilityShiftingSectionState extends State<UtilityShiftingSection> {
               FormDatePicker(
                 label: 'Proposal Submitted Date',
                 selectedDate: _submissionDate,
+                enabled: widget.isEditMode,
                 onDateSelected: (date) {
                   setState(() {
                     _submissionDate = date;
@@ -240,6 +243,7 @@ class _UtilityShiftingSectionState extends State<UtilityShiftingSection> {
 
             TextFormField(
               controller: _statusController,
+              enabled: widget.isEditMode,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
                 labelText: 'Status',
@@ -255,6 +259,8 @@ class _UtilityShiftingSectionState extends State<UtilityShiftingSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

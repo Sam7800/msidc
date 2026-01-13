@@ -1,8 +1,16 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/work_entry.dart';
 import '../../../data/models/work_entry_section.dart';
 import '../../../data/models/section_attachment.dart';
 import '../../../data/models/milestone.dart';
 import '../database_helper.dart';
+
+// Riverpod providers
+final databaseHelperProvider = Provider<DatabaseHelper>((ref) => DatabaseHelper.instance);
+final workEntryRepositoryProvider = Provider<WorkEntryRepository>((ref) {
+  final db = ref.watch(databaseHelperProvider);
+  return WorkEntryRepository(db);
+});
 
 /// WorkEntryRepository - Handles all CRUD operations for work entries, sections, attachments, and milestones
 ///
@@ -142,12 +150,13 @@ class WorkEntryRepository {
 
     if (existing != null) {
       // Update existing section
+      final updateData = section.toJsonForSQLite();
+      updateData.remove('id'); // Remove id field to avoid datatype mismatch error
+      updateData['updated_at'] = DateTime.now().toIso8601String();
+
       await database.update(
         'work_entry_sections',
-        {
-          ...section.toJsonForSQLite(),
-          'updated_at': DateTime.now().toIso8601String(),
-        },
+        updateData,
         where: 'id = ?',
         whereArgs: [existing.id],
       );

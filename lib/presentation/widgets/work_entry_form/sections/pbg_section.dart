@@ -10,12 +10,14 @@ class PBGSection extends StatefulWidget {
   final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const PBGSection({
     super.key,
     required this.projectId,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -119,12 +121,12 @@ class _PBGSectionState extends State<PBGSection> {
               Radio<String>(
                 value: 'not_submitted',
                 groupValue: _submissionStatus,
-                onChanged: (value) {
+                onChanged: widget.isEditMode ? (value) {
                   setState(() {
                     _submissionStatus = value!;
                     _notifyDataChanged();
                   });
-                },
+                } : null,
               ),
               const Text(
                 'a) Not submitted',
@@ -144,12 +146,12 @@ class _PBGSectionState extends State<PBGSection> {
             title: const Text('b) Submitted -'),
             value: 'submitted',
             groupValue: _submissionStatus,
-            onChanged: (value) {
+            onChanged: widget.isEditMode ? (value) {
               setState(() {
                 _submissionStatus = value!;
                 _notifyDataChanged();
               });
-            },
+            } : null,
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),
@@ -178,6 +180,7 @@ class _PBGSectionState extends State<PBGSection> {
                   _notifyDataChanged();
                 });
               },
+              enabled: widget.isEditMode,
             ),
             const SizedBox(height: 16),
 
@@ -195,6 +198,7 @@ class _PBGSectionState extends State<PBGSection> {
             TextFormField(
               controller: _amountController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter amount',
                 prefixIcon: Icon(Icons.currency_rupee, size: 20),
@@ -218,6 +222,7 @@ class _PBGSectionState extends State<PBGSection> {
             TextFormField(
               controller: _periodController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter period',
                 prefixIcon: Icon(Icons.calendar_today, size: 20),
@@ -233,6 +238,8 @@ class _PBGSectionState extends State<PBGSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

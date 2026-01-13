@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/project.dart';
 import '../../../theme/app_colors.dart';
+import '../../../core/database/repositories/work_entry_repository.dart';
+import '../../../data/models/work_entry.dart';
+import '../../../data/models/work_entry_section.dart';
 import 'sections/aa_section.dart';
 import 'sections/dpr_section.dart';
 import 'sections/boq_section.dart';
@@ -57,6 +60,9 @@ class _WorkEntryTabState extends ConsumerState<WorkEntryTab> {
   final Map<String, bool> _expandedSections = {};
   final Map<String, Map<String, dynamic>> _sectionData = {};
   bool _isEditMode = false;
+  late WorkEntryRepository _workEntryRepository;
+  int? _workEntryId;
+  bool _isLoading = true;
   String _searchQuery = '';
 
   // Define all 35 sections in correct sequence
@@ -103,9 +109,139 @@ class _WorkEntryTabState extends ConsumerState<WorkEntryTab> {
   @override
   void initState() {
     super.initState();
+    _workEntryRepository = ref.read(workEntryRepositoryProvider);
     // Initialize all sections as expanded
     for (var section in _sections) {
       _expandedSections[section['id']] = true;
+    }
+    _loadWorkEntryData();
+  }
+
+  Future<void> _loadWorkEntryData() async {
+    try {
+      // 1. Get or create work_entry for this project
+      WorkEntry? workEntry = await _workEntryRepository
+          .getWorkEntryByProjectId(widget.project.id!);
+
+      if (workEntry == null) {
+        // Create new work_entry if doesn't exist
+        workEntry = WorkEntry(
+          projectId: widget.project.id!,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        _workEntryId = await _workEntryRepository.createWorkEntry(workEntry);
+      } else {
+        _workEntryId = workEntry.id;
+      }
+
+      // 2. Load all sections for this work_entry
+      final sections = await _workEntryRepository
+          .getSectionsByWorkEntryId(_workEntryId!);
+
+      // 3. Populate _sectionData map
+      final loadedData = <String, Map<String, dynamic>>{};
+      for (final section in sections) {
+        loadedData[section.sectionName] = {
+          'person_responsible': section.personResponsible,
+          'post_held': section.heldWith,
+          'pending_with': section.pendingWith,
+          'section_data': section.sectionData,
+        };
+      }
+
+      setState(() {
+        _sectionData.addAll(loadedData);
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading data: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveAllSections() async {
+    if (_workEntryId == null) return;
+
+    try {
+      // Show loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                ),
+                SizedBox(width: 16),
+                Text('Saving...'),
+              ],
+            ),
+            duration: Duration(hours: 1),
+          ),
+        );
+      }
+
+      // Save each section
+      for (final entry in _sectionData.entries) {
+        final sectionName = entry.key;
+        final data = entry.value;
+
+        final section = WorkEntrySection(
+          workEntryId: _workEntryId!,
+          sectionName: sectionName,
+          sectionData: data['section_data'] ?? {},
+          personResponsible: data['person_responsible'],
+          pendingWith: data['pending_with'],
+          heldWith: data['post_held'],
+          status: 'in_progress',
+          updatedAt: DateTime.now(),
+        );
+
+        await _workEntryRepository.upsertSection(section);
+      }
+
+      // Update work_entry timestamp
+      final workEntry = await _workEntryRepository.getWorkEntryById(_workEntryId!);
+      if (workEntry != null) {
+        await _workEntryRepository.updateWorkEntry(
+          workEntry.copyWith(updatedAt: DateTime.now())
+        );
+      }
+
+      // Dismiss loading and show success
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Saved successfully!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // Exit edit mode
+      setState(() {
+        _isEditMode = false;
+      });
+    } catch (e) {
+      // Show error
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -134,79 +270,79 @@ class _WorkEntryTabState extends ConsumerState<WorkEntryTab> {
   Widget _buildSectionContent(String sectionId) {
     switch (sectionId) {
       case 'aa':
-        return AASection(initialData: _sectionData['aa'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('aa', data));
+        return AASection(isEditMode: _isEditMode, initialData: _sectionData['aa'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('aa', data));
       case 'dpr':
-        return DPRSection(projectId: widget.project.id, initialData: _sectionData['dpr'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('dpr', data));
+        return DPRSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['dpr'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('dpr', data));
       case 'boq':
-        return BOQSection(projectId: widget.project.id, initialData: _sectionData['boq'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('boq', data));
+        return BOQSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['boq'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('boq', data));
       case 'schedules':
-        return SchedulesSection(projectId: widget.project.id, initialData: _sectionData['schedules'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('schedules', data));
+        return SchedulesSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['schedules'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('schedules', data));
       case 'drawings':
-        return DrawingsSection(projectId: widget.project.id, initialData: _sectionData['drawings'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('drawings', data));
+        return DrawingsSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['drawings'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('drawings', data));
       case 'bid_documents':
-        return BidDocumentsSection(projectId: widget.project.id, initialData: _sectionData['bid_documents'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('bid_documents', data));
+        return BidDocumentsSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['bid_documents'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('bid_documents', data));
       case 'env':
-        return ENVSection(projectId: widget.project.id, initialData: _sectionData['env'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('env', data));
+        return ENVSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['env'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('env', data));
       case 'la':
-        return LASection(projectId: widget.project.id, initialData: _sectionData['la'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('la', data));
+        return LASection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['la'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('la', data));
       case 'utility_shifting':
-        return UtilityShiftingSection(projectId: widget.project.id, initialData: _sectionData['utility_shifting'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('utility_shifting', data));
+        return UtilityShiftingSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['utility_shifting'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('utility_shifting', data));
       case 'ts':
-        return TSSection(projectId: widget.project.id, initialData: _sectionData['ts'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ts', data));
+        return TSSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['ts'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ts', data));
       case 'nit':
-        return NITSection(projectId: widget.project.id, initialData: _sectionData['nit'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('nit', data));
+        return NITSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['nit'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('nit', data));
       case 'pre_bid':
-        return PreBidSection(initialData: _sectionData['pre_bid'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('pre_bid', data));
+        return PreBidSection(isEditMode: _isEditMode, initialData: _sectionData['pre_bid'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('pre_bid', data));
       case 'csd':
-        return CSDSection(projectId: widget.project.id, initialData: _sectionData['csd'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('csd', data));
+        return CSDSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['csd'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('csd', data));
       case 'bid_submission':
-        return BidSubmissionSection(initialData: _sectionData['bid_submission'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('bid_submission', data));
+        return BidSubmissionSection(isEditMode: _isEditMode, initialData: _sectionData['bid_submission'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('bid_submission', data));
       case 'technical_evaluation':
-        return TechnicalEvaluationSection(projectId: widget.project.id, initialData: _sectionData['technical_evaluation'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('technical_evaluation', data));
+        return TechnicalEvaluationSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['technical_evaluation'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('technical_evaluation', data));
       case 'financial_bid':
-        return FinancialBidSection(initialData: _sectionData['financial_bid'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('financial_bid', data));
+        return FinancialBidSection(isEditMode: _isEditMode, initialData: _sectionData['financial_bid'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('financial_bid', data));
       case 'bid_acceptance':
-        return BidAcceptanceSection(projectId: widget.project.id, initialData: _sectionData['bid_acceptance'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('bid_acceptance', data));
+        return BidAcceptanceSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['bid_acceptance'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('bid_acceptance', data));
       case 'loa':
-        return LOASection(projectId: widget.project.id, initialData: _sectionData['loa'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('loa', data));
+        return LOASection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['loa'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('loa', data));
       case 'pbg':
-        return PBGSection(projectId: widget.project.id, initialData: _sectionData['pbg'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('pbg', data));
+        return PBGSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['pbg'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('pbg', data));
       case 'work_order':
-        return WorkOrderSection(projectId: widget.project.id, initialData: _sectionData['work_order'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('work_order', data));
+        return WorkOrderSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['work_order'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('work_order', data));
       case 'agreement_amount':
-        return AgreementAmountSection(initialData: _sectionData['agreement_amount'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('agreement_amount', data));
+        return AgreementAmountSection(isEditMode: _isEditMode, initialData: _sectionData['agreement_amount'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('agreement_amount', data));
       case 'appointed_date':
-        return AppointedDateSection(initialData: _sectionData['appointed_date'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('appointed_date', data));
+        return AppointedDateSection(isEditMode: _isEditMode, initialData: _sectionData['appointed_date'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('appointed_date', data));
       case 'tender_period':
-        return TenderPeriodSection(initialData: _sectionData['tender_period'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('tender_period', data));
+        return TenderPeriodSection(isEditMode: _isEditMode, initialData: _sectionData['tender_period'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('tender_period', data));
       case 'ms1':
-        return MilestoneSection(milestoneName: 'MS-I', initialData: _sectionData['ms1'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ms1', data));
+        return MilestoneSection(milestoneName: 'MS-I', isEditMode: _isEditMode, initialData: _sectionData['ms1'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ms1', data));
       case 'ms2':
-        return MilestoneSection(milestoneName: 'MS-II', initialData: _sectionData['ms2'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ms2', data));
+        return MilestoneSection(milestoneName: 'MS-II', isEditMode: _isEditMode, initialData: _sectionData['ms2'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ms2', data));
       case 'ms3':
-        return MilestoneSection(milestoneName: 'MS-III', initialData: _sectionData['ms3'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ms3', data));
+        return MilestoneSection(milestoneName: 'MS-III', isEditMode: _isEditMode, initialData: _sectionData['ms3'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ms3', data));
       case 'ms4':
-        return MilestoneSection(milestoneName: 'MS-IV', initialData: _sectionData['ms4'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ms4', data));
+        return MilestoneSection(milestoneName: 'MS-IV', isEditMode: _isEditMode, initialData: _sectionData['ms4'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ms4', data));
       case 'ms5':
-        return MilestoneSection(milestoneName: 'MS-V', initialData: _sectionData['ms5'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ms5', data));
+        return MilestoneSection(milestoneName: 'MS-V', isEditMode: _isEditMode, initialData: _sectionData['ms5'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ms5', data));
       case 'ld':
-        return LDSection(initialData: _sectionData['ld'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ld', data));
+        return LDSection(isEditMode: _isEditMode, initialData: _sectionData['ld'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('ld', data));
       case 'eot':
-        return EOTSection(projectId: widget.project.id, initialData: _sectionData['eot'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('eot', data));
+        return EOTSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['eot'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('eot', data));
       case 'cos':
-        return COSSection(projectId: widget.project.id, initialData: _sectionData['cos'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('cos', data));
+        return COSSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['cos'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('cos', data));
       case 'expenditure':
-        return ExpenditureSection(initialData: _sectionData['expenditure'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('expenditure', data));
+        return ExpenditureSection(isEditMode: _isEditMode, initialData: _sectionData['expenditure'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('expenditure', data));
       case 'audit_para':
-        return AuditParaSection(projectId: widget.project.id, initialData: _sectionData['audit_para'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('audit_para', data));
+        return AuditParaSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['audit_para'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('audit_para', data));
       case 'laq':
-        return LAQSection(projectId: widget.project.id, initialData: _sectionData['laq'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('laq', data));
+        return LAQSection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['laq'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('laq', data));
       case 'technical_audit':
-        return TechnicalAuditSection(initialData: _sectionData['technical_audit'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('technical_audit', data));
+        return TechnicalAuditSection(isEditMode: _isEditMode, initialData: _sectionData['technical_audit'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('technical_audit', data));
       case 'rev_aa':
-        return RevAASection(projectId: widget.project.id, initialData: _sectionData['rev_aa'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('rev_aa', data));
+        return RevAASection(projectId: widget.project.id, isEditMode: _isEditMode, initialData: _sectionData['rev_aa'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('rev_aa', data));
       case 'supplementary_agreement':
-        return SupplementaryAgreementSection(initialData: _sectionData['supplementary_agreement'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('supplementary_agreement', data));
+        return SupplementaryAgreementSection(isEditMode: _isEditMode, initialData: _sectionData['supplementary_agreement'] ?? {}, onDataChanged: (data) => _onSectionDataChanged('supplementary_agreement', data));
       default:
         return const Padding(padding: EdgeInsets.all(24), child: Text('Section coming soon...'));
     }
@@ -214,6 +350,12 @@ class _WorkEntryTabState extends ConsumerState<WorkEntryTab> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
     return Column(
       children: [
         // Search Bar and Edit Button
@@ -274,7 +416,13 @@ class _WorkEntryTabState extends ConsumerState<WorkEntryTab> {
               // Edit Button
               ElevatedButton.icon(
                 onPressed: () {
-                  setState(() => _isEditMode = !_isEditMode);
+                  if (_isEditMode) {
+                    // Save when clicking Done/Save
+                    _saveAllSections();
+                  } else {
+                    // Enable edit mode
+                    setState(() => _isEditMode = true);
+                  }
                 },
                 icon: Icon(
                   _isEditMode ? Icons.check : Icons.edit,

@@ -11,12 +11,14 @@ class COSSection extends StatefulWidget {
   final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const COSSection({
     super.key,
     required this.projectId,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -129,12 +131,12 @@ class _COSSectionState extends State<COSSection> {
                   title: const Text('Not applicable'),
                   value: 'na',
                   groupValue: _applicability,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _applicability = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -144,12 +146,12 @@ class _COSSectionState extends State<COSSection> {
                   title: const Text('Applicable'),
                   value: 'applicable',
                   groupValue: _applicability,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _applicability = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -166,12 +168,12 @@ class _COSSectionState extends State<COSSection> {
               title: const Text('Proposal Not started'),
               value: 'not_started',
               groupValue: _proposalStatus,
-              onChanged: (value) {
+              onChanged: widget.isEditMode ? (value) {
                 setState(() {
                   _proposalStatus = value!;
                   _notifyDataChanged();
                 });
-              },
+              } : null,
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -182,12 +184,12 @@ class _COSSectionState extends State<COSSection> {
                 Radio<String>(
                   value: 'under_consideration',
                   groupValue: _proposalStatus,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _proposalStatus = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                 ),
                 const Expanded(
                   child: Text(
@@ -214,6 +216,7 @@ class _COSSectionState extends State<COSSection> {
                   });
                 },
                 addButtonLabel: 'Add Item',
+                enabled: widget.isEditMode,
               ),
             ],
             const SizedBox(height: 8),
@@ -224,12 +227,12 @@ class _COSSectionState extends State<COSSection> {
                 Radio<String>(
                   value: 'submitted',
                   groupValue: _proposalStatus,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _proposalStatus = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                 ),
                 const Text(
                   'Proposal Submitted: Date',
@@ -256,6 +259,7 @@ class _COSSectionState extends State<COSSection> {
                       _notifyDataChanged();
                     });
                   },
+                  enabled: widget.isEditMode,
                 ),
               ),
             ],
@@ -266,12 +270,12 @@ class _COSSectionState extends State<COSSection> {
               title: const Text('Proposal Approved'),
               value: 'approved',
               groupValue: _proposalStatus,
-              onChanged: (value) {
+              onChanged: widget.isEditMode ? (value) {
                 setState(() {
                   _proposalStatus = value!;
                   _notifyDataChanged();
                 });
-              },
+              } : null,
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -287,6 +291,7 @@ class _COSSectionState extends State<COSSection> {
                   });
                 },
                 addButtonLabel: 'Add Item',
+                enabled: widget.isEditMode,
               ),
             ],
           ],
@@ -298,6 +303,8 @@ class _COSSectionState extends State<COSSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

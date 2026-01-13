@@ -8,12 +8,14 @@ class ExpenditureSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
   final double? agreementAmount; // From Agreement section for percentage calculation
+  final bool isEditMode;
 
   const ExpenditureSection({
     super.key,
     required this.initialData,
     required this.onDataChanged,
     this.agreementAmount,
+    required this.isEditMode,
   });
 
   @override
@@ -99,6 +101,7 @@ class _ExpenditureSectionState extends State<ExpenditureSection> {
           TextFormField(
             controller: _cumulativeAmountController,
             onChanged: (_) => _notifyDataChanged(),
+            enabled: widget.isEditMode,
             decoration: const InputDecoration(
               labelText: 'Cumulative Expenditure (in Lakhs)',
               hintText: 'e.g., 300',
@@ -164,6 +167,8 @@ class _ExpenditureSectionState extends State<ExpenditureSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

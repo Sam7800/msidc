@@ -10,12 +10,14 @@ class RevAASection extends StatefulWidget {
   final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const RevAASection({
     super.key,
     required this.projectId,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -134,12 +136,12 @@ class _RevAASectionState extends State<RevAASection> {
                   title: const Text('Not Required'),
                   value: 'not_required',
                   groupValue: _requirement,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _requirement = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -149,12 +151,12 @@ class _RevAASectionState extends State<RevAASection> {
                   title: const Text('Necessary'),
                   value: 'necessary',
                   groupValue: _requirement,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _requirement = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -175,6 +177,7 @@ class _RevAASectionState extends State<RevAASection> {
             TextFormField(
               controller: _reasonsController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               maxLines: 3,
               decoration: const InputDecoration(
                 hintText: 'Enter reasons',
@@ -192,6 +195,7 @@ class _RevAASectionState extends State<RevAASection> {
             TextFormField(
               controller: _amountProposedController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter amount',
                 prefixIcon: Icon(Icons.currency_rupee, size: 20),
@@ -217,12 +221,12 @@ class _RevAASectionState extends State<RevAASection> {
               title: const Text('In progress'),
               value: 'in_progress',
               groupValue: _status,
-              onChanged: (value) {
+              onChanged: widget.isEditMode ? (value) {
                 setState(() {
                   _status = value!;
                   _notifyDataChanged();
                 });
-              },
+              } : null,
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -233,12 +237,12 @@ class _RevAASectionState extends State<RevAASection> {
                 Radio<String>(
                   value: 'submitted',
                   groupValue: _status,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _status = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                 ),
                 const Expanded(
                   child: Text(
@@ -259,12 +263,12 @@ class _RevAASectionState extends State<RevAASection> {
               title: const Text('Approved'),
               value: 'approved',
               groupValue: _status,
-              onChanged: (value) {
+              onChanged: widget.isEditMode ? (value) {
                 setState(() {
                   _status = value!;
                   _notifyDataChanged();
                 });
-              },
+              } : null,
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -274,12 +278,12 @@ class _RevAASectionState extends State<RevAASection> {
               title: const Text('Board Approval'),
               value: 'board_approval',
               groupValue: _status,
-              onChanged: (value) {
+              onChanged: widget.isEditMode ? (value) {
                 setState(() {
                   _status = value!;
                   _notifyDataChanged();
                 });
-              },
+              } : null,
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -289,12 +293,12 @@ class _RevAASectionState extends State<RevAASection> {
               title: const Text('Revised AA Accorded'),
               value: 'revised_aa_accorded',
               groupValue: _status,
-              onChanged: (value) {
+              onChanged: widget.isEditMode ? (value) {
                 setState(() {
                   _status = value!;
                   _notifyDataChanged();
                 });
-              },
+              } : null,
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -310,6 +314,7 @@ class _RevAASectionState extends State<RevAASection> {
             TextFormField(
               controller: _revisedAANoController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter revised AA number',
                 border: OutlineInputBorder(),
@@ -327,6 +332,7 @@ class _RevAASectionState extends State<RevAASection> {
                   _notifyDataChanged();
                 });
               },
+              enabled: widget.isEditMode,
             ),
             const SizedBox(height: 16),
 
@@ -339,6 +345,7 @@ class _RevAASectionState extends State<RevAASection> {
             TextFormField(
               controller: _raaTableController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               maxLines: 3,
               decoration: const InputDecoration(
                 hintText: 'Enter details',
@@ -354,6 +361,8 @@ class _RevAASectionState extends State<RevAASection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

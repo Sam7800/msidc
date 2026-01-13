@@ -8,11 +8,13 @@ import '../form_date_picker.dart';
 class SupplementaryAgreementSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const SupplementaryAgreementSection({
     super.key,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -130,12 +132,12 @@ class _SupplementaryAgreementSectionState
                   title: const Text('Not applicable'),
                   value: 'na',
                   groupValue: _applicability,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _applicability = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -145,12 +147,12 @@ class _SupplementaryAgreementSectionState
                   title: const Text('Applicable'),
                   value: 'applicable',
                   groupValue: _applicability,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _applicability = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -171,6 +173,7 @@ class _SupplementaryAgreementSectionState
             TextFormField(
               controller: _necessityController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               maxLines: 3,
               decoration: const InputDecoration(
                 hintText: 'Enter necessity details',
@@ -188,6 +191,7 @@ class _SupplementaryAgreementSectionState
             TextFormField(
               controller: _amountController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter amount',
                 prefixIcon: Icon(Icons.currency_rupee, size: 20),
@@ -207,6 +211,7 @@ class _SupplementaryAgreementSectionState
                   _notifyDataChanged();
                 });
               },
+              enabled: widget.isEditMode,
             ),
             const SizedBox(height: 16),
 
@@ -219,6 +224,7 @@ class _SupplementaryAgreementSectionState
             TextFormField(
               controller: _scopeOfWorkController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               maxLines: 3,
               decoration: const InputDecoration(
                 hintText: 'Enter scope of work',
@@ -236,6 +242,7 @@ class _SupplementaryAgreementSectionState
             TextFormField(
               controller: _periodController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter period in months',
                 border: OutlineInputBorder(),
@@ -251,6 +258,8 @@ class _SupplementaryAgreementSectionState
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

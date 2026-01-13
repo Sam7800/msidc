@@ -6,11 +6,13 @@ import '../section_common_fields.dart';
 class AgreementAmountSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const AgreementAmountSection({
     super.key,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -79,6 +81,7 @@ class _AgreementAmountSectionState extends State<AgreementAmountSection> {
           TextFormField(
             controller: _amountController,
             onChanged: (_) => _notifyDataChanged(),
+            enabled: widget.isEditMode,
             decoration: const InputDecoration(
               labelText: 'Agreement Amount (in Lakhs)',
               hintText: 'e.g., 450',
@@ -93,6 +96,8 @@ class _AgreementAmountSectionState extends State<AgreementAmountSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

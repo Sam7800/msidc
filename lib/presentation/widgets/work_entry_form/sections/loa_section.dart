@@ -10,12 +10,14 @@ class LOASection extends StatefulWidget {
   final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const LOASection({
     super.key,
     required this.projectId,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -130,12 +132,12 @@ class _LOASectionState extends State<LOASection> {
             title: const Text('a) Issued'),
             value: 'issued',
             groupValue: _issuedStatus,
-            onChanged: (value) {
+            onChanged: widget.isEditMode ? (value) {
               setState(() {
                 _issuedStatus = value!;
                 _notifyDataChanged();
               });
-            },
+            } : null,
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),
@@ -146,12 +148,12 @@ class _LOASectionState extends State<LOASection> {
               Radio<String>(
                 value: 'not_issued',
                 groupValue: _issuedStatus,
-                onChanged: (value) {
+                onChanged: widget.isEditMode ? (value) {
                   setState(() {
                     _issuedStatus = value!;
                     _notifyDataChanged();
                   });
-                },
+                } : null,
               ),
               const Text(
                 'b) Not issued – Reasons',
@@ -172,6 +174,7 @@ class _LOASectionState extends State<LOASection> {
             TextFormField(
               controller: _reasonsController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 hintText: 'Enter reasons',
                 border: OutlineInputBorder(),
@@ -186,6 +189,8 @@ class _LOASectionState extends State<LOASection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

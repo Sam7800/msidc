@@ -75,12 +75,22 @@ class CriticalSubsectionsRepository {
     int projectId,
   ) async {
     final db = await _dbHelper.database;
-    return await db.query(
-      'critical_subsections',
-      where: 'project_id = ?',
-      whereArgs: [projectId],
-      orderBy: 'section_name ASC, option_name ASC',
-    );
+    return await db.rawQuery('''
+      SELECT
+        cs.*,
+        p.name as project_name,
+        p.sr_no as project_sr_no,
+        c.name as category_name,
+        wes.person_responsible,
+        wes.pending_with
+      FROM critical_subsections cs
+      INNER JOIN projects p ON cs.project_id = p.id
+      INNER JOIN categories c ON p.category_id = c.id
+      LEFT JOIN work_entries we ON we.project_id = p.id
+      LEFT JOIN work_entry_sections wes ON wes.work_entry_id = we.id AND wes.section_name = cs.section_name
+      WHERE cs.project_id = ?
+      ORDER BY cs.section_name ASC, cs.option_name ASC
+    ''', [projectId]);
   }
 
   /// Get all critical subsections across all projects

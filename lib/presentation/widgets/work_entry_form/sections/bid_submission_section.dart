@@ -8,11 +8,13 @@ import '../form_date_picker.dart';
 class BidSubmissionSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const BidSubmissionSection({
     super.key,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -106,6 +108,7 @@ class _BidSubmissionSectionState extends State<BidSubmissionSection> {
                 _notifyDataChanged();
               });
             },
+            enabled: widget.isEditMode,
           ),
           const SizedBox(height: 24),
 
@@ -122,6 +125,7 @@ class _BidSubmissionSectionState extends State<BidSubmissionSection> {
           TextFormField(
             controller: _biddersCountController,
             onChanged: (_) => _notifyDataChanged(),
+            enabled: widget.isEditMode,
             decoration: const InputDecoration(
               hintText: 'Enter number',
               prefixIcon: Icon(Icons.people, size: 20),
@@ -148,12 +152,12 @@ class _BidSubmissionSectionState extends State<BidSubmissionSection> {
                   title: const Text('Yes'),
                   value: 'yes',
                   groupValue: _emdVerificationDone,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _emdVerificationDone = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -163,12 +167,12 @@ class _BidSubmissionSectionState extends State<BidSubmissionSection> {
                   title: const Text('No'),
                   value: 'no',
                   groupValue: _emdVerificationDone,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _emdVerificationDone = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -181,6 +185,8 @@ class _BidSubmissionSectionState extends State<BidSubmissionSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

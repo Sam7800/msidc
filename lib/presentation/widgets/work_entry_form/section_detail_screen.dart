@@ -115,18 +115,21 @@ class _SectionDetailScreenState extends ConsumerState<SectionDetailScreen> {
     switch (widget.sectionId) {
       case 'aa':
         return AASection(
+          isEditMode: true,
           initialData: _sectionData,
           onDataChanged: _onDataChanged,
         );
       case 'dpr':
         return DPRSection(
           projectId: widget.project.id,
+          isEditMode: true,
           initialData: _sectionData,
           onDataChanged: _onDataChanged,
         );
       case 'boq':
         return BOQSection(
           projectId: widget.project.id,
+          isEditMode: true,
           initialData: _sectionData,
           onDataChanged: _onDataChanged,
         );

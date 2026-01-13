@@ -7,11 +7,13 @@ import '../form_date_picker.dart';
 class AppointedDateSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const AppointedDateSection({
     super.key,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -81,6 +83,7 @@ class _AppointedDateSectionState extends State<AppointedDateSection> {
           FormDatePicker(
             label: 'Appointed Date',
             selectedDate: _appointedDate,
+            enabled: widget.isEditMode,
             onDateSelected: (date) {
               setState(() {
                 _appointedDate = date;
@@ -94,6 +97,8 @@ class _AppointedDateSectionState extends State<AppointedDateSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

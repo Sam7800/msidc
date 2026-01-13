@@ -8,11 +8,13 @@ import '../form_date_picker.dart';
 class AgreementSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const AgreementSection({
     super.key,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -92,6 +94,7 @@ class _AgreementSectionState extends State<AgreementSection> {
           TextFormField(
             controller: _amountController,
             onChanged: (_) => _notifyDataChanged(),
+            enabled: widget.isEditMode,
             decoration: const InputDecoration(
               labelText: 'Agreement Amount (in Lakhs)',
               hintText: 'e.g., 450',
@@ -105,6 +108,7 @@ class _AgreementSectionState extends State<AgreementSection> {
           FormDatePicker(
             label: 'Agreement Date',
             selectedDate: _agreementDate,
+            enabled: widget.isEditMode,
             onDateSelected: (date) {
               setState(() {
                 _agreementDate = date;
@@ -117,6 +121,7 @@ class _AgreementSectionState extends State<AgreementSection> {
           TextFormField(
             controller: _periodController,
             onChanged: (_) => _notifyDataChanged(),
+            enabled: widget.isEditMode,
             decoration: const InputDecoration(
               labelText: 'Period (in months)',
               hintText: 'e.g., 18',
@@ -131,6 +136,8 @@ class _AgreementSectionState extends State<AgreementSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

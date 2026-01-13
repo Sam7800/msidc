@@ -11,12 +11,14 @@ class TSSection extends StatefulWidget {
   final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const TSSection({
     super.key,
     required this.projectId,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -148,12 +150,12 @@ class _TSSectionState extends State<TSSection> {
                   title: const Text('Awaited'),
                   value: 'awaited',
                   groupValue: _selectedType,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _selectedType = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -163,12 +165,12 @@ class _TSSectionState extends State<TSSection> {
                   title: const Text('Accorded'),
                   value: 'accorded',
                   groupValue: _selectedType,
-                  onChanged: (value) {
+                  onChanged: widget.isEditMode ? (value) {
                     setState(() {
                       _selectedType = value!;
                       _notifyDataChanged();
                     });
-                  },
+                  } : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -189,23 +191,23 @@ class _TSSectionState extends State<TSSection> {
                   children: [
                     Checkbox(
                       value: isSelected,
-                      onChanged: (checked) {
+                      onChanged: widget.isEditMode ? (checked) {
                         if (checked == true) {
                           setState(() {
                             _selectedStatus = option['value']!;
                             _notifyDataChanged();
                           });
                         }
-                      },
+                      } : null,
                     ),
                     Expanded(
                       child: InkWell(
-                        onTap: () {
+                        onTap: widget.isEditMode ? () {
                           setState(() {
                             _selectedStatus = option['value']!;
                             _notifyDataChanged();
                           });
-                        },
+                        } : null,
                         child: Text(
                           option['label']!,
                           style: const TextStyle(fontSize: 14),
@@ -236,6 +238,7 @@ class _TSSectionState extends State<TSSection> {
                     _notifyDataChanged();
                   });
                 },
+                enabled: widget.isEditMode,
               ),
               const SizedBox(height: 16),
             ],
@@ -244,6 +247,7 @@ class _TSSectionState extends State<TSSection> {
             TextFormField(
               controller: _statusController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 labelText: 'Status',
                 hintText: 'Enter current status',
@@ -256,6 +260,7 @@ class _TSSectionState extends State<TSSection> {
             TextFormField(
               controller: _amountController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 labelText: 'Amount (Rs. Crore / Lakhs)',
                 hintText: 'e.g., 450 Lakhs or 45 Crore',
@@ -268,6 +273,7 @@ class _TSSectionState extends State<TSSection> {
             TextFormField(
               controller: _tsNoController,
               onChanged: (_) => _notifyDataChanged(),
+              enabled: widget.isEditMode,
               decoration: const InputDecoration(
                 labelText: 'TS No.',
                 hintText: 'e.g., "TS/2026/001"',
@@ -286,6 +292,7 @@ class _TSSectionState extends State<TSSection> {
                   _notifyDataChanged();
                 });
               },
+              enabled: widget.isEditMode,
             ),
             const SizedBox(height: 24),
 
@@ -309,6 +316,7 @@ class _TSSectionState extends State<TSSection> {
                 });
               },
               addButtonLabel: 'Add Item',
+              enabled: widget.isEditMode,
             ),
           ],
 
@@ -317,6 +325,8 @@ class _TSSectionState extends State<TSSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

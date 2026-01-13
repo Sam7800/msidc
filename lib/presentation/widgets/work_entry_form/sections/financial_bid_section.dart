@@ -8,11 +8,13 @@ import '../form_date_picker.dart';
 class FinancialBidSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const FinancialBidSection({
     super.key,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -119,6 +121,7 @@ class _FinancialBidSectionState extends State<FinancialBidSection> {
                 _notifyDataChanged();
               });
             },
+            enabled: widget.isEditMode,
           ),
           const SizedBox(height: 24),
 
@@ -135,6 +138,7 @@ class _FinancialBidSectionState extends State<FinancialBidSection> {
           TextFormField(
             controller: _qualifiedBiddersController,
             onChanged: (_) => _notifyDataChanged(),
+            enabled: widget.isEditMode,
             decoration: const InputDecoration(
               hintText: 'Enter number',
               prefixIcon: Icon(Icons.people, size: 20),
@@ -181,12 +185,12 @@ class _FinancialBidSectionState extends State<FinancialBidSection> {
                 child: Text(option),
               );
             }).toList(),
-            onChanged: (value) {
+            onChanged: widget.isEditMode ? (value) {
               setState(() {
                 _l1h1Offer = value!;
                 _notifyDataChanged();
               });
-            },
+            } : null,
           ),
           const SizedBox(height: 16),
 
@@ -210,6 +214,7 @@ class _FinancialBidSectionState extends State<FinancialBidSection> {
           TextFormField(
             controller: _offerAmountController,
             onChanged: (_) => _notifyDataChanged(),
+            enabled: widget.isEditMode,
             decoration: const InputDecoration(
               hintText: 'Enter amount',
               prefixIcon: Icon(Icons.currency_rupee, size: 20),
@@ -237,6 +242,7 @@ class _FinancialBidSectionState extends State<FinancialBidSection> {
           TextFormField(
             controller: _percentageAboveBelowController,
             onChanged: (_) => _notifyDataChanged(),
+            enabled: widget.isEditMode,
             decoration: const InputDecoration(
               hintText: 'e.g., +5% or -3%',
               prefixIcon: Icon(Icons.percent, size: 20),
@@ -250,6 +256,8 @@ class _FinancialBidSectionState extends State<FinancialBidSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

@@ -7,12 +7,14 @@ import '../critical_bell_icon.dart';
 /// Status checkboxes with bell icons
 class BidAcceptanceSection extends StatefulWidget {
   final int? projectId;
+  final bool isEditMode;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const BidAcceptanceSection({
     super.key,
     required this.projectId,
+    required this.isEditMode,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -114,23 +116,27 @@ class _BidAcceptanceSectionState extends State<BidAcceptanceSection> {
                 children: [
                   Checkbox(
                     value: isSelected,
-                    onChanged: (checked) {
-                      if (checked == true) {
-                        setState(() {
-                          _selectedStatus = option['value']!;
-                          _notifyDataChanged();
-                        });
-                      }
-                    },
+                    onChanged: widget.isEditMode
+                        ? (checked) {
+                            if (checked == true) {
+                              setState(() {
+                                _selectedStatus = option['value']!;
+                                _notifyDataChanged();
+                              });
+                            }
+                          }
+                        : null,
                   ),
                   Expanded(
                     child: InkWell(
-                      onTap: () {
-                        setState(() {
-                          _selectedStatus = option['value']!;
-                          _notifyDataChanged();
-                        });
-                      },
+                      onTap: widget.isEditMode
+                          ? () {
+                              setState(() {
+                                _selectedStatus = option['value']!;
+                                _notifyDataChanged();
+                              });
+                            }
+                          : null,
                       child: Text(
                         option['label']!,
                         style: const TextStyle(fontSize: 14),
@@ -152,6 +158,7 @@ class _BidAcceptanceSectionState extends State<BidAcceptanceSection> {
 
           TextFormField(
             controller: _remarksController,
+            enabled: widget.isEditMode,
             onChanged: (_) => _notifyDataChanged(),
             maxLines: 3,
             decoration: const InputDecoration(
@@ -168,6 +175,8 @@ class _BidAcceptanceSectionState extends State<BidAcceptanceSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

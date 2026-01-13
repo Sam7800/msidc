@@ -6,11 +6,13 @@ import '../section_common_fields.dart';
 class TenderPeriodSection extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const TenderPeriodSection({
     super.key,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -79,6 +81,7 @@ class _TenderPeriodSectionState extends State<TenderPeriodSection> {
           TextFormField(
             controller: _periodController,
             onChanged: (_) => _notifyDataChanged(),
+            enabled: widget.isEditMode,
             decoration: const InputDecoration(
               labelText: 'Tender Period (in months)',
               hintText: 'e.g., 18',
@@ -93,6 +96,8 @@ class _TenderPeriodSectionState extends State<TenderPeriodSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

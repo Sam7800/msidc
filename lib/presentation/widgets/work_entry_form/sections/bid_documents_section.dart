@@ -10,12 +10,14 @@ class BidDocumentsSection extends StatefulWidget {
   final int? projectId;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
+  final bool isEditMode;
 
   const BidDocumentsSection({
     super.key,
     required this.projectId,
     required this.initialData,
     required this.onDataChanged,
+    required this.isEditMode,
   });
 
   @override
@@ -114,23 +116,23 @@ class _BidDocumentsSectionState extends State<BidDocumentsSection> {
                 children: [
                   Checkbox(
                     value: isSelected,
-                    onChanged: (checked) {
+                    onChanged: widget.isEditMode ? (checked) {
                       if (checked == true) {
                         setState(() {
                           _selectedStatus = option['value']!;
                           _notifyDataChanged();
                         });
                       }
-                    },
+                    } : null,
                   ),
                   Expanded(
                     child: InkWell(
-                      onTap: () {
+                      onTap: widget.isEditMode ? () {
                         setState(() {
                           _selectedStatus = option['value']!;
                           _notifyDataChanged();
                         });
-                      },
+                      } : null,
                       child: Text(
                         option['label']!,
                         style: const TextStyle(fontSize: 14),
@@ -160,6 +162,7 @@ class _BidDocumentsSectionState extends State<BidDocumentsSection> {
                   _notifyDataChanged();
                 });
               },
+              enabled: widget.isEditMode,
             ),
           ],
 
@@ -168,6 +171,8 @@ class _BidDocumentsSectionState extends State<BidDocumentsSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

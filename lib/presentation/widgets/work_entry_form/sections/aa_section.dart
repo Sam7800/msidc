@@ -6,11 +6,13 @@ import '../form_date_picker.dart';
 /// AA Section - Administrative Approval
 /// Radio buttons: Awaited / Accorded with conditional fields
 class AASection extends StatefulWidget {
+  final bool isEditMode;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const AASection({
     super.key,
+    required this.isEditMode,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -146,12 +148,14 @@ class _AASectionState extends State<AASection> {
                   title: const Text('Awaited'),
                   value: 'awaited',
                   groupValue: _selectedType,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedType = value!;
-                      _notifyDataChanged();
-                    });
-                  },
+                  onChanged: widget.isEditMode
+                      ? (value) {
+                          setState(() {
+                            _selectedType = value!;
+                            _notifyDataChanged();
+                          });
+                        }
+                      : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -161,12 +165,14 @@ class _AASectionState extends State<AASection> {
                   title: const Text('Accorded'),
                   value: 'accorded',
                   groupValue: _selectedType,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedType = value!;
-                      _notifyDataChanged();
-                    });
-                  },
+                  onChanged: widget.isEditMode
+                      ? (value) {
+                          setState(() {
+                            _selectedType = value!;
+                            _notifyDataChanged();
+                          });
+                        }
+                      : null,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -180,6 +186,7 @@ class _AASectionState extends State<AASection> {
             // Awaited Fields
             TextFormField(
               controller: _proposedAmountController,
+              enabled: widget.isEditMode,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
                 labelText: 'Proposed Amount (in Crores/Lakhs)',
@@ -193,6 +200,7 @@ class _AASectionState extends State<AASection> {
             FormDatePicker(
               label: 'Date of Proposal',
               selectedDate: _dateOfProposal,
+              enabled: widget.isEditMode,
               onDateSelected: (date) {
                 setState(() {
                   _dateOfProposal = date;
@@ -204,6 +212,7 @@ class _AASectionState extends State<AASection> {
 
             TextFormField(
               controller: _pendingWithWhomController,
+              enabled: widget.isEditMode,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
                 labelText: 'Pending With Whom',
@@ -216,6 +225,7 @@ class _AASectionState extends State<AASection> {
             // Accorded Fields
             TextFormField(
               controller: _amountController,
+              enabled: widget.isEditMode,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
                 labelText: 'Amount (in Crores/Lakhs)',
@@ -228,6 +238,7 @@ class _AASectionState extends State<AASection> {
 
             TextFormField(
               controller: _aaNoController,
+              enabled: widget.isEditMode,
               onChanged: (_) => _notifyDataChanged(),
               decoration: const InputDecoration(
                 labelText: 'AA Number',
@@ -241,6 +252,7 @@ class _AASectionState extends State<AASection> {
             FormDatePicker(
               label: 'Date',
               selectedDate: _dateAccorded,
+              enabled: widget.isEditMode,
               onDateSelected: (date) {
                 setState(() {
                   _dateAccorded = date;
@@ -252,6 +264,7 @@ class _AASectionState extends State<AASection> {
 
             TextFormField(
               controller: _broadScopeController,
+              enabled: widget.isEditMode,
               onChanged: (_) => _notifyDataChanged(),
               maxLines: 3,
               decoration: const InputDecoration(
@@ -269,6 +282,8 @@ class _AASectionState extends State<AASection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),

@@ -8,6 +8,7 @@ class DynamicTableWidget extends StatefulWidget {
   final List<Map<String, String>> rows;
   final Function(List<Map<String, String>>) onRowsChanged;
   final String addButtonLabel;
+  final bool enabled;
 
   const DynamicTableWidget({
     super.key,
@@ -15,6 +16,7 @@ class DynamicTableWidget extends StatefulWidget {
     required this.rows,
     required this.onRowsChanged,
     this.addButtonLabel = 'Add Row',
+    this.enabled = true,
   });
 
   @override
@@ -123,12 +125,14 @@ class _DynamicTableWidgetState extends State<DynamicTableWidget> {
                       // Delete button
                       SizedBox(
                         width: 60,
-                        child: IconButton(
-                          icon: const Icon(Icons.delete_outline, size: 18),
-                          color: AppColors.error,
-                          onPressed: () => _removeRow(index),
-                          tooltip: 'Remove row',
-                        ),
+                        child: widget.enabled
+                            ? IconButton(
+                                icon: const Icon(Icons.delete_outline, size: 18),
+                                color: AppColors.error,
+                                onPressed: () => _removeRow(index),
+                                tooltip: 'Remove row',
+                              )
+                            : const SizedBox.shrink(),
                       ),
                       // Data columns
                       ...widget.columnHeaders.map((header) => Expanded(
@@ -144,6 +148,8 @@ class _DynamicTableWidgetState extends State<DynamicTableWidget> {
                               ),
                               child: TextFormField(
                                 initialValue: row[header] ?? '',
+                                enabled: widget.enabled,
+                                readOnly: !widget.enabled,
                                 onChanged: (value) =>
                                     _updateCell(index, header, value),
                                 decoration: const InputDecoration(
@@ -154,7 +160,12 @@ class _DynamicTableWidgetState extends State<DynamicTableWidget> {
                                   ),
                                   isDense: true,
                                 ),
-                                style: const TextStyle(fontSize: 13),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: widget.enabled
+                                      ? AppColors.textPrimary
+                                      : Colors.grey,
+                                ),
                               ),
                             ),
                           )),
@@ -168,16 +179,17 @@ class _DynamicTableWidgetState extends State<DynamicTableWidget> {
 
         const SizedBox(height: 12),
 
-        // Add Row Button
-        OutlinedButton.icon(
-          onPressed: _addRow,
-          icon: const Icon(Icons.add, size: 18),
-          label: Text(widget.addButtonLabel),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            side: const BorderSide(color: AppColors.border),
+        // Add Row Button (only show when enabled)
+        if (widget.enabled)
+          OutlinedButton.icon(
+            onPressed: _addRow,
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(widget.addButtonLabel),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              side: const BorderSide(color: AppColors.border),
+            ),
           ),
-        ),
       ],
     );
   }

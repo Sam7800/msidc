@@ -6,12 +6,14 @@ import '../section_common_fields.dart';
 /// Period, targets, achievements
 class MilestoneSection extends StatefulWidget {
   final String milestoneName; // MS-I, MS-II, MS-III, MS-IV, MS-V
+  final bool isEditMode;
   final Map<String, dynamic> initialData;
   final Function(Map<String, dynamic>) onDataChanged;
 
   const MilestoneSection({
     super.key,
     required this.milestoneName,
+    required this.isEditMode,
     required this.initialData,
     required this.onDataChanged,
   });
@@ -122,6 +124,7 @@ class _MilestoneSectionState extends State<MilestoneSection> {
               border: OutlineInputBorder(),
             ),
             keyboardType: TextInputType.number,
+            enabled: widget.isEditMode,
           ),
           const SizedBox(height: 24),
 
@@ -149,6 +152,7 @@ class _MilestoneSectionState extends State<MilestoneSection> {
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  enabled: widget.isEditMode,
                 ),
               ),
               const SizedBox(width: 16),
@@ -163,6 +167,7 @@ class _MilestoneSectionState extends State<MilestoneSection> {
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  enabled: widget.isEditMode,
                 ),
               ),
             ],
@@ -193,6 +198,7 @@ class _MilestoneSectionState extends State<MilestoneSection> {
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  enabled: widget.isEditMode,
                 ),
               ),
               const SizedBox(width: 16),
@@ -207,6 +213,7 @@ class _MilestoneSectionState extends State<MilestoneSection> {
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  enabled: widget.isEditMode,
                 ),
               ),
             ],
@@ -250,6 +257,8 @@ class _MilestoneSectionState extends State<MilestoneSection> {
             personResponsibleController: _personResponsibleController,
             postHeldController: _postHeldController,
             pendingWithController: _pendingWithController,
+            enabled: widget.isEditMode,
+            onChanged: _notifyDataChanged,
           ),
         ],
       ),
