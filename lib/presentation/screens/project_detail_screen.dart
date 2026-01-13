@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../data/models/project.dart';
 import '../../theme/app_colors.dart';
 import '../widgets/work_entry_form/work_entry_tab.dart';
-import '../widgets/module_tabs/review_tab_placeholder.dart';
+import '../widgets/module_tabs/review_tab.dart';
 import 'critical_activities_screen.dart';
 
 /// Project Detail Screen - Shows 2 module tabs for selected project
@@ -164,16 +164,26 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
-              tabs: const [
+              tabs: [
                 Tab(
-                  icon: Icon(Icons.edit_document, size: 20),
-                  iconMargin: EdgeInsets.only(bottom: 4),
-                  text: 'Work Entry',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.edit_document, size: 18),
+                      SizedBox(width: 8),
+                      Text('Work Entry'),
+                    ],
+                  ),
                 ),
                 Tab(
-                  icon: Icon(Icons.dashboard_customize, size: 20),
-                  iconMargin: EdgeInsets.only(bottom: 4),
-                  text: 'Review',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.dashboard_customize, size: 18),
+                      SizedBox(width: 8),
+                      Text('Review'),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -187,7 +197,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
             project: widget.project,
             categoryColor: categoryColor,
           ),
-          ReviewTabPlaceholder(
+          ReviewTab(
             project: widget.project,
             categoryColor: categoryColor,
           ),
